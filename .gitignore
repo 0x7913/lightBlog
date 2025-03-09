@@ -1,0 +1,17 @@
+# Node.js 依赖
+blog-system/node_modules/
+blog-frontend/node_modules/
+
+# 环境变量文件
+.env
+
+# 上传的图片
+uploads/
+
+# # Vite / Vue 缓存
+# blog-frontend/.vitepress/
+# blog-frontend/.output/
+
+# # 其他忽略项
+# .DS_Store
+# dist/
