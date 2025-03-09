@@ -1,5 +1,5 @@
 <template>
-  <router-view></router-view>
+  <div class="container">文章发布页面</div>
 </template>
 
 <script setup lang="ts"></script>

@@ -95,7 +95,6 @@ CREATE TABLE `users` (
 -- ----------------------------
 -- Records of users
 -- ----------------------------
-INSERT INTO `users` VALUES ('e5852e84-922b-41dd-8c09-c78cca4687aa', 'wod', '2807267929@qq.com', '$2b$10$7oilAXiuftMp3P8be26q1uGnzZQxCpuUl0Me37cViZQT98A3VxwAK', null, '1', '2025-03-09 16:50:21', '2025-03-09 16:50:21');
 
 -- ----------------------------
 -- Table structure for verificationcodes
@@ -114,4 +113,3 @@ CREATE TABLE `verificationcodes` (
 -- ----------------------------
 -- Records of verificationcodes
 -- ----------------------------
-INSERT INTO `verificationcodes` VALUES ('cf87df68-7ec4-46a2-9355-c34e876f0ec4', '2807267929@qq.com', '710754', '2025-03-09 09:06:56', '2025-03-09 09:01:56', '2025-03-09 09:01:56');
