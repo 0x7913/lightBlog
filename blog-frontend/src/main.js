@@ -8,5 +8,5 @@ import App from './App.vue'
 const app = createApp(App)
 app.component("Icon", Icon);
 app.use(router)
-app.mount('#app')
 app.use(ElementPlus)
+app.mount('#app');
