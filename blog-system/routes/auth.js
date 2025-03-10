@@ -92,14 +92,16 @@ router.post("/login", async (req, res) => {
   res.json({ message: "登录成功", token: generateToken(user) });
 });
 
-//  获取用户信息（需要登录）
+// 获取用户信息（需要登录）
 router.get("/me", async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return res.status(401).json({ message: "未提供 Token" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.id, { attributes: ["id", "username", "email"] });
+    const user = await User.findByPk(decoded.id, { 
+      attributes: ["id", "username", "email", "avatar"]
+    });
 
     if (!user) return res.status(404).json({ message: "用户不存在" });
 
