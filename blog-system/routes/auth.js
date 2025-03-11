@@ -5,6 +5,10 @@ const User = require("../models/User")
 const VerificationCode = require("../models/VerificationCode")
 const { Op } = require("sequelize");
 const nodemailer = require("nodemailer");
+const multer = require("multer");
+const { v4: uuidv4 } = require("uuid");
+const path = require("path");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -108,6 +112,50 @@ router.get("/me", async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(401).json({ message: "Token 无效" });
+  }
+});
+
+// 配置 Multer 存储头像
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+      cb(null, "uploads/avatars/"); // 存放头像
+  },
+  filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname); // 获取后缀名
+      const uniqueName = uuidv4() + ext; // 生成唯一文件名
+      cb(null, uniqueName);
+  }
+});
+
+const upload = multer({ storage });
+
+//修改用户信息（用户名 & 头像）
+router.put("/update-profile", authMiddleware, upload.single("avatar"), async (req, res) => {
+  try {
+      const userId = req.user.id; // 从 authMiddleware 获取用户 ID
+      const { username } = req.body; // 获取新用户名
+      let avatarPath = null;
+
+      if (req.file) {
+          avatarPath = `/uploads/avatars/${req.file.filename}`;
+      }
+
+      // 查找用户
+      const user = await User.findByPk(userId);
+      if (!user) {
+          return res.status(404).json({ message: "用户不存在" });
+      }
+
+      // 更新信息（如果前端没传 `username` 或 `avatar`，就保持原值）
+      user.username = username || user.username;
+      user.avatar = avatarPath || user.avatar;
+
+      await user.save();
+
+      res.json({ message: "用户信息更新成功", user });
+  } catch (error) {
+      console.error("更新用户信息失败:", error);
+      res.status(500).json({ message: "服务器错误" });
   }
 });
 

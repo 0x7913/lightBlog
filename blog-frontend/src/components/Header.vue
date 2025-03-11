@@ -2,17 +2,17 @@
     <div class="top-header">
         <div class="header-container"></div>
         <div class="sign" v-if="!userInfo">
-            <el-button size="large" text @click="openLogin">登 录</el-button>
-            <el-button size="large" type="primary" plain @click="openRegister">注 册</el-button>
+            <el-button size="large" text @click="openLogin()">登 录</el-button>
+            <el-button size="large" type="primary" plain @click="openRegister()">创 建 账 号</el-button>
         </div>
         <!-- 用户信息展示区域 -->
         <div v-else class="signed">
             <div>
-                <el-button size="large" type="primary" plain>发布文章</el-button>
+                <el-button size="large" type="primary" plain @click="goToCreate()">发布文章</el-button>
             </div>
-            <el-dropdown class="user-avatar" trigger="click" placement="bottom-end">
+            <el-dropdown class="user-avatar" trigger="click" placement="bottom-end" @command="handleCommand">
                 <div>
-                    <img :src="userInfo.avatar || Avatar" alt="用户头像" class="avatar-img" />
+                    <img :src="'http://localhost:5000' + userInfo.avatar || Avatar" alt="用户头像" class="avatar-img" />
                 </div>
                 <template #dropdown>
                     <el-dropdown-menu slot="dropdown">
@@ -82,7 +82,9 @@ import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import * as BlogApi from '@/api';
 import Avatar from '@/assets/avatar/avatar.png'
+import { useRouter } from "vue-router";
 
+const router = useRouter()
 const showLogin = ref(false);
 const showRegister = ref(false);
 const codeTimer = ref(0);
@@ -209,6 +211,37 @@ const fetchUserInfo = async () => {
         console.error("获取用户信息失败", error);
     }
 };
+
+const handleCommand = (command) => {
+    switch (command) {
+        case "logout":
+            logout();
+            break;
+        case "settings":
+            ElMessage.warning("暂未开放设置功能");
+            break;
+        case "profile":
+            router.push("/profile");
+            break;
+        case "create":
+            router.push("/create");
+            break;
+        default:
+            console.warn("未知命令:", command);
+    }
+}
+
+const goToCreate = () => {
+    router.push("/create");
+}
+
+const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userInfo");
+    userInfo.value = null;
+    ElMessage.success("退出成功");
+    router.push("/");
+}
 // 页面加载时检查是否有用户信息
 onMounted(() => {
     const savedUserInfo = localStorage.getItem("userInfo");
