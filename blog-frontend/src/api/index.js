@@ -21,32 +21,39 @@ export const getUserInfo = async () => {
   return await request.get('/auth/me');
 };
 
-// 文章相关接口
-export const getPosts = async () => {
-  return await request.get('/post');
+// 更新用户信息（支持修改用户名和头像）
+export const updateUserInfo = async (data) => {
+  return await request.put('/auth/update-profile', data, {
+    headers: { 'Content-Type': 'multipart/form-data' }, // 适用于文件上传
+  });
 };
 
-export const getPostById = async (id) => {
-  return await request.get(`/post/${id}`);
-};
+// // 文章相关接口
+// export const getPosts = async () => {
+//   return await request.get('/post');
+// };
 
-export const createPost = async (data) => {
-  return await request.post('/post', data);
-};
+// export const getPostById = async (id) => {
+//   return await request.get(`/post/${id}`);
+// };
 
-export const deletePost = async (id) => {
-  return await request.delete(`/post/${id}`);
-};
+// export const createPost = async (data) => {
+//   return await request.post('/post', data);
+// };
 
-// 评论相关接口
-export const getComments = async (postId) => {
-  return await request.get('/comment', { params: { postId } });
-};
+// export const deletePost = async (id) => {
+//   return await request.delete(`/post/${id}`);
+// };
 
-export const addComment = async (postId, content) => {
-  return await request.post('/comment', { postId, content });
-};
+// // 评论相关接口
+// export const getComments = async (postId) => {
+//   return await request.get('/comment', { params: { postId } });
+// };
 
-export const deleteComment = async (id) => {
-  return await request.delete(`/comment/${id}`);
-};
+// export const addComment = async (postId, content) => {
+//   return await request.post('/comment', { postId, content });
+// };
+
+// export const deleteComment = async (id) => {
+//   return await request.delete(`/comment/${id}`);
+// };

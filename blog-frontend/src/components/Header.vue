@@ -1,9 +1,14 @@
 <template>
     <div class="top-header">
-        <div class="header-container"></div>
-        <div class="sign" v-if="!userInfo">
+        <div style="flex:0.5;"></div>
+        <div class="header-container">
+            <div class="logo" @click="toHome()">
+                EchoLog
+            </div>
+        </div>
+        <div class="sign" v-if="!userInfo?.id && !userInfo?.username && !userInfo?.email">
             <el-button size="large" text @click="openLogin()">登 录</el-button>
-            <el-button size="large" type="primary" plain @click="openRegister()">创 建 账 号</el-button>
+            <el-button size="large" @click="openRegister()">创 建 账 号</el-button>
         </div>
         <!-- 用户信息展示区域 -->
         <div v-else class="signed">
@@ -12,7 +17,8 @@
             </div>
             <el-dropdown class="user-avatar" trigger="click" placement="bottom-end" @command="handleCommand">
                 <div>
-                    <img :src="'http://localhost:5000' + userInfo.avatar || Avatar" alt="用户头像" class="avatar-img" />
+                    <img :src="userInfo.avatar ? 'http://localhost:5000' + userInfo.avatar : Avatar" alt="用户头像"
+                        class="avatar-img" />
                 </div>
                 <template #dropdown>
                     <el-dropdown-menu slot="dropdown">
@@ -206,7 +212,6 @@ const fetchUserInfo = async () => {
         const res = await BlogApi.getUserInfo();
         userInfo.value = res
         localStorage.setItem("userInfo", JSON.stringify(userInfo.value));
-        console.log(userInfo.value);
     } catch (error) {
         console.error("获取用户信息失败", error);
     }
@@ -218,7 +223,7 @@ const handleCommand = (command) => {
             logout();
             break;
         case "settings":
-            ElMessage.warning("暂未开放设置功能");
+            router.push("/setting");
             break;
         case "profile":
             router.push("/profile");
@@ -234,7 +239,9 @@ const handleCommand = (command) => {
 const goToCreate = () => {
     router.push("/create");
 }
-
+const toHome = () => {
+    router.push("/");
+}
 const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
@@ -261,9 +268,24 @@ onMounted(() => {
     top: 0px;
     left: 0px;
     right: 0px;
+    z-index: 10000;
 
     .header-container {
         flex: 3;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 10px 20px;
+
+        .logo {
+            background: #000;
+            border-radius: 4px;
+            padding: 4px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+            cursor: pointer;
+        }
     }
 
     .sign {
