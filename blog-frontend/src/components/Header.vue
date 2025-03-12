@@ -1,11 +1,11 @@
 <template>
     <div class="top-header">
-        <div style="flex:0.5;"></div>
         <div class="header-container">
             <div class="logo" @click="toHome()">
                 EchoLog
             </div>
         </div>
+        <div style="flex:3;"></div>
         <div class="sign" v-if="!userInfo?.id && !userInfo?.username && !userInfo?.email">
             <el-button size="large" text @click="openLogin()">登 录</el-button>
             <el-button size="large" @click="openRegister()">创 建 账 号</el-button>
@@ -281,11 +281,10 @@ onUnmounted(() => {
     z-index: 10000;
 
     .header-container {
-        flex: 3;
+        flex: 1;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
-        padding: 10px 20px;
+        justify-content: flex-end;
 
         .logo {
             background: #000;
@@ -302,14 +301,14 @@ onUnmounted(() => {
         flex: 1;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
     }
 
     .signed {
         flex: 1;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         gap: 16px;
 
         .user-avatar {
