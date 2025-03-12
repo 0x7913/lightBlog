@@ -21,11 +21,16 @@ export const getUserInfo = async () => {
   return await request.get('/auth/me');
 };
 
-// 更新用户信息（支持修改用户名和头像）
-export const updateUserInfo = async (data) => {
-  return await request.put('/auth/update-profile', data, {
-    headers: { 'Content-Type': 'multipart/form-data' }, // 适用于文件上传
+// 上传头像（返回头像 URL）
+export const uploadAvatar = async (formData) => {
+  return await request.post("/auth/upload-avatar", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
+};
+
+// 更新用户信息（前端传入 avatar URL）
+export const updateUserInfo = async (data) => {
+  return await request.put("/auth/update-profile", data);
 };
 
 // // 文章相关接口

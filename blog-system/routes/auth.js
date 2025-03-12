@@ -21,97 +21,103 @@ const generateToken = (user) => {
 router.post("/send-code", async (req, res) => {
   const { email } = req.body;
 
-  // 生成 6 位数验证码
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 分钟后过期
+  try {
+     // 生成 6 位数验证码
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+ // 存储验证码
+    await VerificationCode.create({ email, code, expiresAt });
+// 配置邮件发送
+    const transporter = nodemailer.createTransport({
+      service: "qq",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-  // 存储验证码
-  await VerificationCode.create({ email, code, expiresAt });
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "你的验证码",
+      text: `你的验证码是: ${code}, 5分钟内有效`,
+    };
 
-  // 配置邮件发送
-  const transporter = nodemailer.createTransport({
-    service: "qq", // 可以改成 Gmail、163 等
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "你的验证码",
-    text: `你的验证码是: ${code}, 5分钟内有效`,
-  };
-
-  transporter.sendMail(mailOptions, (error) => {
-    if (error) {
-      return res.status(500).json({ message: "邮件发送失败" });
-    }
-    res.json({ message: "验证码已发送" });
-  });
+    transporter.sendMail(mailOptions, (error) => {
+      if (error) {
+        return res.json({ code: 500, data: null, msg: "邮件发送失败" });
+      }
+      res.json({ code: 0, data: true, msg: "" });
+    });
+  } catch (error) {
+    res.json({ code: 500, data: null, msg: "服务器错误" });
+  }
 });
 
 //  用户注册
 router.post("/register", async (req, res) => {
   const { username, email, password, code } = req.body;
   if (!code) {
-    return res.status(400).json({ message: "验证码不能为空" });
-  }
-  // 校验验证码
-  const validCode = await VerificationCode.findOne({
-    where: { email, code, expiresAt: { [Op.gt]: new Date() } },
-  });
-
-  if (!validCode) {
-    return res.status(400).json({ message: "验证码无效或已过期" });
+    return res.json({ code: 400, data: null, msg: "验证码不能为空" });
   }
 
-  // 检查用户是否存在
-  const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
-  if (existingUser) return res.status(400).json({ message: "用户名或邮箱已被注册" });
+  try {
+    const validCode = await VerificationCode.findOne({
+      where: { email, code, expiresAt: { [Op.gt]: new Date() } },
+    });
 
-  // 哈希加密密码
-  const hashedPassword = await bcrypt.hash(password, 10);
+    if (!validCode) {
+      return res.json({ code: 400, data: null, msg: "验证码无效或已过期" });
+    }
 
-  // 创建用户
-  const newUser = await User.create({ username, email, password: hashedPassword, isVerified: true });
+    const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
+    if (existingUser) {
+      return res.json({ code: 400, data: null, msg: "用户名或邮箱已被注册" });
+    }
 
-  // 删除验证码
-  await validCode.destroy();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.create({ username, email, password: hashedPassword, isVerified: true });
 
-  res.status(201).json({ message: "注册成功", token: generateToken(newUser) });
+    await validCode.destroy();
+
+    res.json({ code: 0, data: { token: generateToken(newUser) }, msg: "" });
+  } catch (error) {
+    res.json({ code: 500, data: null, msg: "服务器错误" });
+  }
 });
-
 //  用户登录
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ where: { email } });
-  if (!user) return res.status(404).json({ message: "用户不存在" });
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.json({ code: 404, data: null, msg: "用户不存在" });
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) return res.status(400).json({ message: "密码错误" });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.json({ code: 400, data: null, msg: "密码错误" });
 
-  res.json({ message: "登录成功", token: generateToken(user) });
+    res.json({ code: 0, data: { token: generateToken(user) }, msg: "" });
+  } catch (error) {
+    res.json({ code: 500, data: null, msg: "服务器错误" });
+  }
 });
 
 // 获取用户信息（需要登录）
-router.get("/me", async (req, res) => {
+router.get("/me", authMiddleware, async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ message: "未提供 Token" });
+    if (!token) return res.json({ code: 401, data: null, msg: "未提供 Token" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findByPk(decoded.id, { 
       attributes: ["id", "username", "email", "avatar"]
     });
 
-    if (!user) return res.status(404).json({ message: "用户不存在" });
+    if (!user) return res.json({ code: 404, data: null, msg: "用户不存在" });
 
-    res.json(user);
+    res.json({ code: 0, data: user, msg: "" });
   } catch (error) {
-    res.status(401).json({ message: "Token 无效" });
+    res.json({ code: 401, data: null, msg: "Token 无效" });
   }
 });
 
@@ -129,33 +135,41 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-//修改用户信息（用户名 & 头像）
-router.put("/update-profile", authMiddleware, upload.single("avatar"), async (req, res) => {
+//头像上传 API
+router.post("/upload-avatar", authMiddleware, upload.single("avatar"), (req, res) => {
   try {
-      const userId = req.user.id; // 从 authMiddleware 获取用户 ID
-      const { username } = req.body; // 获取新用户名
-      let avatarPath = null;
+    if (!req.file) {
+      return res.json({ code: 400, data: null, msg: "请上传头像文件" });
+    }
 
-      if (req.file) {
-          avatarPath = `/uploads/avatars/${req.file.filename}`;
-      }
-
-      // 查找用户
-      const user = await User.findByPk(userId);
-      if (!user) {
-          return res.status(404).json({ message: "用户不存在" });
-      }
-
-      // 更新信息（如果前端没传 `username` 或 `avatar`，就保持原值）
-      user.username = username || user.username;
-      user.avatar = avatarPath || user.avatar;
-
-      await user.save();
-
-      res.json({ message: "用户信息更新成功", user });
+    const avatarPath = `/uploads/avatars/${req.file.filename}`;
+    res.json({ code: 0, data: { avatar: avatarPath }, msg: "" });
   } catch (error) {
-      console.error("更新用户信息失败:", error);
-      res.status(500).json({ message: "服务器错误" });
+    res.json({ code: 500, data: null, msg: "服务器错误" });
+  }
+});
+//更新用户信息 API（前端传入 avatar URL）
+router.put("/update-profile", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id; // 从 authMiddleware 获取用户 ID
+    const { username, avatar } = req.body; // 头像由前端上传后传 URL
+
+    // 查找用户
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.json({ code: 1, data: null, msg: "用户不存在" });
+    }
+
+    // 更新信息（如果前端没传 `username` 或 `avatar`，就保持原值）
+    user.username = username || user.username;
+    user.avatar = avatar || user.avatar;
+
+    await user.save();
+
+    res.json({ code: 0, data: true, msg: "" }); // 成功返回 data = true，msg 为空
+  } catch (error) {
+    console.error("更新用户信息失败:", error);
+    res.status(500).json({ code: 500, data: null, msg: "服务器错误" });
   }
 });
 

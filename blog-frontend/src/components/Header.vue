@@ -84,11 +84,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { ElMessage } from "element-plus";
 import * as BlogApi from '@/api';
 import Avatar from '@/assets/avatar/avatar.png'
 import { useRouter } from "vue-router";
+import { eventBus } from '@/utils/eventBus';
 
 const router = useRouter()
 const showLogin = ref(false);
@@ -105,7 +106,7 @@ const registerFormRef = ref(null);
 const loginRules = {
     email: [
         { required: true, message: "请输入邮箱", trigger: "blur" },
-        { type: "email", message: "请输入正确的邮箱格式", trigger: ["blur", "change"] },
+        { type: "email", message: "请输入正确的邮箱格式", trigger: ["blur"] },
     ],
     password: [
         { required: true, message: "请输入密码", trigger: "blur" },
@@ -114,11 +115,12 @@ const loginRules = {
 
 const registerRules = {
     username: [
-        { required: true, message: "请输入用户名", trigger: "blur" },
+        { required: true, message: "用户名不能为空", trigger: "blur" },
+        { min: 3, max: 20, message: "用户名长度在 3 到 20 个字符", trigger: "blur" }
     ],
     email: [
         { required: true, message: "请输入邮箱", trigger: "blur" },
-        { type: "email", message: "请输入正确的邮箱格式", trigger: ["blur", "change"] },
+        { type: "email", message: "请输入正确的邮箱格式", trigger: ["blur"] },
     ],
     code: [
         { required: true, message: "请输入验证码", trigger: "blur" },
@@ -184,7 +186,7 @@ const handleLogin = () => {
         if (!valid) return;
         try {
             const res = await BlogApi.login(loginForm.value);
-            localStorage.setItem("token", res.token);
+            localStorage.setItem("token", res.data.token);
             ElMessage.success("登录成功");
             fetchUserInfo();
             showLogin.value = false;
@@ -210,7 +212,7 @@ const handleRegister = () => {
 const fetchUserInfo = async () => {
     try {
         const res = await BlogApi.getUserInfo();
-        userInfo.value = res
+        userInfo.value = res.data
         localStorage.setItem("userInfo", JSON.stringify(userInfo.value));
     } catch (error) {
         console.error("获取用户信息失败", error);
@@ -249,12 +251,20 @@ const logout = () => {
     ElMessage.success("退出成功");
     router.push("/");
 }
+
+const updateUserInfo = (newUserInfo) => {
+    userInfo.value = newUserInfo;
+};
 // 页面加载时检查是否有用户信息
 onMounted(() => {
     const savedUserInfo = localStorage.getItem("userInfo");
     if (savedUserInfo) {
         userInfo.value = JSON.parse(savedUserInfo);
     }
+    eventBus.on("userInfoUpdated", updateUserInfo);
+});
+onUnmounted(() => {
+    eventBus.off("userInfoUpdated", updateUserInfo);
 });
 </script>
 

@@ -13,22 +13,27 @@
                             <span>{{ userInfo?.email }}</span>
                         </div>
                     </template>
-                    <el-form :model="formData" label-width="80px">
-                        <el-form-item label="用户名">
-                            <el-input v-model="formData.username" placeholder="请输入用户名" />
+
+                    <el-form ref="formRef" :model="formData" :rules="rules" label-width="80px">
+                        <el-form-item label="用户名" :error="usernameError" prop="username">
+                            <el-input v-model="formData.username" placeholder="请输入用户名" @input="validateUsername" />
                         </el-form-item>
                         <el-form-item label="电子邮箱">
                             <el-input v-model="formData.email" disabled />
                         </el-form-item>
                         <el-form-item label="头像">
-                            <div class="avatar-preview">
-                                <img v-if="avatarUrl" :src="avatarUrl" class="avatar" width="50" height="50" />
-                                <!-- <Icon v-else icon="line-md:file-upload" width="48" height="48" /> -->
-                            </div>
-                            <input type="file" @change="handleFileChange" accept="image/*" />
+                            <el-upload class="avatar-uploader" :show-file-list="false" :http-request="uploadAvatar"
+                                accept="image/*">
+                                <img v-if="avatarUrl" :src="avatarUrl" class="avatar" />
+                            </el-upload>
                         </el-form-item>
                     </el-form>
-                    <template #footer><el-button type="primary" @click="submitForm">保存修改</el-button></template>
+
+                    <template #footer>
+                        <el-button type="primary" @click="submitForm">
+                            保存修改
+                        </el-button>
+                    </template>
                 </el-card>
             </template>
             <template v-else-if="activeMenu === 'account'">
@@ -47,68 +52,86 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import * as BlogApi from '@/api';
+import { eventBus } from '@/utils/eventBus';
 
-const userInfo = ref(null)
+const userInfo = ref(null);
+const avatarUrl = ref('');
+const activeMenu = ref('overview');
+const LOCAL_BASE_URL = 'http://localhost:5000';
 
-// 表单数据
+const formRef = ref(null);
 const formData = ref({
     username: '',
     email: '',
-    avatar: null as string | null, // 存头像 URL
-    avatarFile: null as File | null, // 存 File
+    avatar: '',
+    relativeAvatarUrl: ''// 头像相对路径
 });
 
-const avatarUrl = ref(''); // 头像预览
-const activeMenu = ref('overview');
+const rules = {
+    username: [
+        { required: true, message: "用户名不能为空", trigger: "blur" },
+        { min: 3, max: 20, message: "用户名长度在 3 到 20 个字符", trigger: "blur" }
+    ]
+};
 
 const handleSelect = (key, keyPath) => {
     activeMenu.value = key
 };
 
-// 处理文件选择
-const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    formData.value.avatarFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        avatarUrl.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-};
-
-const submitForm = async () => {
-    const submitData = new FormData();
-    submitData.append('username', formData.value.username);
-    if (formData.value.avatarFile) {
-        submitData.append('avatar', formData.value.avatarFile);
-    }
-
+// 头像上传方法
+const uploadAvatar = async (fileData: { file: File }) => {
     try {
-        const res = await BlogApi.updateUserInfo(submitData);
-        console.log(res);
+        const uploadFormData = new FormData();
+        uploadFormData.append("avatar", fileData.file);
 
-        if (res) {
-            ElMessage.success('修改成功');
+        const res = await BlogApi.uploadAvatar(uploadFormData);
+        console.log("接口返回数据:", res);
 
-            userInfo.value = {
-                ...userInfo.value,
-                username: res.user.username,
-                avatar: res.user.avatar, // 确保返回的是相对路径
-            };
-            localStorage.setItem("userInfo", JSON.stringify(userInfo.value));
+        if (res && res.code === 0) {
+            avatarUrl.value = `${LOCAL_BASE_URL}${res.data.avatar}`;
+            formData.value.relativeAvatarUrl = res.data.avatar;
+            ElMessage.success("头像上传成功！");
+        } else {
+            ElMessage.error("头像上传失败，请重试！");
         }
-    } catch (err) {
-        console.error('修改失败:', err);
-        ElMessage.error('修改失败，请重试');
+    } catch (error) {
+        console.error("接口请求异常:", error);
+        ElMessage.error("头像上传失败，请重试！");
     }
 };
+// 提交修改
+const submitForm = async () => {
+    formRef.value.validate(async (valid) => {
+        try {
+            const res = await BlogApi.updateUserInfo({
+                username: formData.value.username,
+                avatar: formData.value.relativeAvatarUrl // 提交最新的头像路径
+            });
+            if (res?.code === 0) {
+                fetchUserInfo()
+                ElMessage.success("用户信息更新成功！");
+            }
+        } catch (error) {
+            ElMessage.error("更新失败，请重试！");
+        }
+    })
+};
 
-const LOCAL_BASE_URL = 'http://localhost:5000';
+
+const fetchUserInfo = async () => {
+    try {
+        const res = await BlogApi.getUserInfo();
+        userInfo.value = res.data
+        localStorage.setItem("userInfo", JSON.stringify(userInfo.value));
+        // 触发事件，通知其他组件更新
+        eventBus.emit("userInfoUpdated", userInfo.value);
+    } catch (error) {
+        console.error("获取用户信息失败", error);
+    }
+};
 
 onMounted(() => {
     const savedUserInfo = localStorage.getItem("userInfo");
@@ -154,6 +177,11 @@ onMounted(() => {
     .card-header {
         font-weight: 700;
         font-size: 24px;
+    }
+
+    .avatar {
+        width: 46px;
+        height: 46px;
     }
 
     :deep(.el-card.is-always-shadow, .el-card.is-hover-shadow:focus, .el-card.is-hover-shadow:hover) {

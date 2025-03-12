@@ -7,4 +7,8 @@
 import Header from "@/components/Header.vue";
 </script>
 
-<style></style>
+<style>
+:root .el-message {
+  z-index: 10001 !important;
+}
+</style>
