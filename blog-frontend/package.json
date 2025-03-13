@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-vue": "^7.3.0",
     "axios": "^1.8.2",
     "element-plus": "^2.9.6",
     "mitt": "^3.0.1",

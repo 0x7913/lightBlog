@@ -13,7 +13,7 @@
         <!-- 用户信息展示区域 -->
         <div v-else class="signed">
             <div>
-                <el-button size="large" type="primary" plain @click="goToCreate()">发布文章</el-button>
+                <el-button size="large" type="primary" plain @click="goToCreate()">创建文章</el-button>
             </div>
             <el-dropdown class="user-avatar" trigger="click" placement="bottom-end" @command="handleCommand">
                 <div>
