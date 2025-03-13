@@ -1,10 +1,10 @@
 <template>
   <div class="container">
-    <div class="post-container">首页</div>
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup>
+</script>
 
 <style lang="scss" scoped>
 .container {

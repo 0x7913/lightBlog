@@ -1,5 +1,25 @@
 <template>
   <div class="container">
+    <Tiptap />
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import Tiptap from '../components/Tiptap.vue'
+</script>
+
+<style lang="scss" scoped>
+.container {
+  margin: 0 20%;
+  padding-top: 60px;
+}
+</style>
+
+
+
+<!-- <template>
+  <div class="container">
   </div>
   <Editor @content-change="handleContentChange" />
   <div v-if="editorContent">
@@ -25,4 +45,4 @@ const handleContentChange = (content) => {
   margin: 0 20%;
   padding-top: 60px;
 }
-</style>
+</style> -->
