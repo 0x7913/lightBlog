@@ -279,6 +279,7 @@ onUnmounted(() => {
     left: 0px;
     right: 0px;
     z-index: 10000;
+    border-bottom: 1px solid #d1d9e0;
 
     .header-container {
         flex: 1;

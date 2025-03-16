@@ -9,7 +9,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-vue": "^7.3.0",
     "@tiptap/extension-color": "^2.11.5",
     "@tiptap/extension-link": "^2.11.5",
     "@tiptap/extension-list-item": "^2.11.5",
@@ -20,6 +19,7 @@
     "@tiptap/starter-kit": "^2.11.5",
     "@tiptap/vue-3": "^2.11.5",
     "axios": "^1.8.2",
+    "easymde": "^2.20.0",
     "element-plus": "^2.9.6",
     "mitt": "^3.0.1",
     "pinia": "^3.0.1",

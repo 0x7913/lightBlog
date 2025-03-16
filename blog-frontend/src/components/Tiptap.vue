@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <div v-if="editor" class="container">
         <div class="control-group">
             <div class="button-group">
@@ -238,4 +238,4 @@ export default {
         margin: 2rem 0;
     }
 }
-</style>
+</style> -->

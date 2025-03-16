@@ -15,8 +15,8 @@
                     </template>
 
                     <el-form ref="formRef" :model="formData" :rules="rules" label-width="80px">
-                        <el-form-item label="用户名" :error="usernameError" prop="username">
-                            <el-input v-model="formData.username" placeholder="请输入用户名" @input="validateUsername" />
+                        <el-form-item label="用户名" prop="username">
+                            <el-input v-model="formData.username" placeholder="请输入用户名" />
                         </el-form-item>
                         <el-form-item label="电子邮箱">
                             <el-input v-model="formData.email" disabled />
@@ -105,17 +105,19 @@ const uploadAvatar = async (fileData: { file: File }) => {
 // 提交修改
 const submitForm = async () => {
     formRef.value.validate(async (valid) => {
-        try {
-            const res = await BlogApi.updateUserInfo({
-                username: formData.value.username,
-                avatar: formData.value.relativeAvatarUrl // 提交最新的头像路径
-            });
-            if (res?.code === 0) {
-                fetchUserInfo()
-                ElMessage.success("用户信息更新成功！");
+        if (valid) {
+            try {
+                const res = await BlogApi.updateUserInfo({
+                    username: formData.value.username,
+                    avatar: formData.value.relativeAvatarUrl // 提交最新的头像路径
+                });
+                if (res?.code === 0) {
+                    fetchUserInfo()
+                    ElMessage.success("用户信息更新成功！");
+                }
+            } catch (error) {
+                ElMessage.error("更新失败，请重试！");
             }
-        } catch (error) {
-            ElMessage.error("更新失败，请重试！");
         }
     })
 };
