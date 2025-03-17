@@ -21,6 +21,7 @@
     "axios": "^1.8.2",
     "easymde": "^2.20.0",
     "element-plus": "^2.9.6",
+    "highlight.js": "^11.11.1",
     "mitt": "^3.0.1",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.2.0",

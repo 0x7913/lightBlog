@@ -6,8 +6,10 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref, watch, defineProps, defineEmits } from "vue";
+import { ElMessage } from 'element-plus';
 import EasyMDE from "easymde";
 import "easymde/dist/easymde.min.css";
+import * as BlogApi from '@/api';
 
 const props = defineProps({
     modelValue: String,
@@ -18,27 +20,29 @@ const editorRef = ref(null);
 let easyMDE = null;
 
 const fileUpload = async (file, onSuccess, onError) => {
-    console.log("🚀 EasyMDE 正在执行 fileUpload", file); // 检查是否被调用
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
+    // 检查文件类型
+    if (!allowedTypes.includes(file.type)) {
+        onError("只能上传 JPEG, PNG, GIF, 或 WebP 格式的图片");
+        return;
+    }
     try {
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("image", file);
 
-        const response = await fetch("https://your-api.com/upload", {
-            method: "POST",
-            body: formData,
-        });
+        // 调用上传文章图片的 API
+        const res = await BlogApi.uploadPostImage(formData);
 
-        const result = await response.json();
-        console.log("✅ 上传成功：", result);
-
-        if (result.url) {
-            onSuccess(result.url); // 返回图片 URL
+        if (res.code === 0 && res.data?.url) {
+            ElMessage.success("图片上传成功！");
+            const fullUrl = `http://localhost:5000${res.data.url}`;
+            onSuccess(fullUrl);
         } else {
-            throw new Error("Upload failed");
+            ElMessage.error("图片上传失败，请重试！");
         }
     } catch (error) {
-        console.error("❌ 上传失败：", error);
+        console.error("上传失败：", error);
         onError("Upload failed");
     }
 };
@@ -50,29 +54,42 @@ onMounted(() => {
             autofocus: true,
             spellChecker: false,
             uploadImage: true,
+            minHeight: "600px",
             imageUploadFunction: fileUpload, // 自定义上传函数
             imageAccept: "image/*", // 限制只能上传图片
             placeholder: "请输入 Markdown 内容...",
             toolbar: [
-                "bold",
-                "italic",
-                "heading",
+                { name: "bold", action: EasyMDE.toggleBold, className: "fa fa-bold", title: "加粗" },
+                { name: "italic", action: EasyMDE.toggleItalic, className: "fa fa-italic", title: "斜体" },
+                { name: "heading", action: EasyMDE.toggleHeadingSmaller, className: "fa fa-header", title: "标题" },
                 "|",
-                "quote",
-                "code",
-                "unordered-list",
-                "ordered-list",
+                { name: "quote", action: EasyMDE.toggleBlockquote, className: "fa fa-quote-left", title: "引用" },
+                { name: "code", action: EasyMDE.toggleCodeBlock, className: "fa fa-code", title: "代码" },
+                {
+                    name: "inline-code", action: function (editor) {
+                        var cm = editor.codemirror;
+                        var selection = cm.getSelection();
+                        cm.replaceSelection('`' + selection + '`');
+                        if (!selection) {
+                            var cursorPos = cm.getCursor();
+                            cm.setCursor(cursorPos.line, cursorPos.ch - 1);
+                        }
+                        cm.focus();
+                    }, className: "fa fa-terminal", title: "行内代码"
+                },
+                { name: "unordered-list", action: EasyMDE.toggleUnorderedList, className: "fa fa-list-ul", title: "无序列表" },
+                { name: "ordered-list", action: EasyMDE.toggleOrderedList, className: "fa fa-list-ol", title: "有序列表" },
                 "|",
-                "link",
-                "image", // 确保包含图片按钮
-                "table",
-                "horizontal-rule",
+                { name: "link", action: EasyMDE.drawLink, className: "fa fa-link", title: "插入链接" },
+                { name: "image", action: EasyMDE.drawImage, className: "fa fa-image", title: "插入图片" },
+                { name: "table", action: EasyMDE.drawTable, className: "fa fa-table", title: "插入表格" },
+                { name: "horizontal-rule", action: EasyMDE.drawHorizontalRule, className: "fa fa-minus", title: "插入水平线" },
                 "|",
-                "preview",
-                "side-by-side",
-                "fullscreen",
+                { name: "preview", action: EasyMDE.togglePreview, className: "fa fa-eye no-disable", title: "预览" },
+                { name: "side-by-side", action: EasyMDE.toggleSideBySide, className: "fa fa-columns no-disable", title: "并排预览" },
+                { name: "fullscreen", action: EasyMDE.toggleFullScreen, className: "fa fa-arrows-alt no-disable", title: "全屏" },
                 "|",
-                "guide",
+                { name: "guide", action: "https://www.markdownguide.org/basic-syntax/", className: "fa fa-question-circle", title: "Markdown 指南" },
             ],
         });
 
@@ -107,12 +124,50 @@ onBeforeUnmount(() => {
 
 <style lang="scss">
 .EasyMDEContainer {
+
+    img {
+        max-width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        padding: 5px;
+    }
+
+    .CodeMirror {
+        height: 600px;
+    }
+
     .fullscreen {
         z-index: 10003 !important;
     }
 
     .CodeMirror-scroll {
         overflow: hidden;
+    }
+
+    /* 行内代码样式 */
+    .editor-preview code:not(pre code),
+    .editor-preview-active code:not(pre code) {
+        background-color: var(--gray-100);
+        color: var(--tw-prose-code);
+        padding: .15rem .3rem;
+        font-weight: 500;
+        border-radius: .25rem;
+    }
+
+
+    /* 预览区域中的代码块样式 */
+    .editor-preview pre code,
+    .editor-preview-active pre code {
+        background: #282c34;
+        /* 背景颜色 */
+        color: #abb2bf;
+        /* 文字颜色 */
+        padding: 10px;
+        /* 内边距 */
+        border-radius: 4px;
+        /* 圆角边框 */
+        display: block;
+        overflow-x: auto;
     }
 }
 </style>

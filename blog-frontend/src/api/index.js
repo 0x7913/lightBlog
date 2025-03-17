@@ -33,7 +33,13 @@ export const updateUserInfo = async (data) => {
   return await request.put("/auth/update-profile", data);
 };
 
-// // 文章相关接口
+// 文章相关接口
+// 上传文章图片（返回头像 URL）
+export const uploadPostImage = async (formData) => {
+  return await request.post("/post/upload-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
 // export const getPosts = async () => {
 //   return await request.get('/post');
 // };

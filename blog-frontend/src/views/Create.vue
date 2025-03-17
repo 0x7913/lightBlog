@@ -1,7 +1,7 @@
 <template>
   <div class="container">
-    <h2>发布文章</h2>
-    <input type="text" v-model="title" placeholder="文章标题" class="title-input" />
+    <el-input style="width: 100%" v-model="title" placeholder="请输入文章标题..." class="title-input"
+      :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }" />
     <MarkdownEditor v-if="content !== null" v-model="content" />
     <button @click="publishArticle">发布</button>
   </div>
@@ -25,10 +25,22 @@ const publishArticle = () => {
   });
 };
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 .container {
   margin: 0 20%;
   padding-top: 60px;
+}
+
+.title-input {
+  height: 48px;
+  margin-bottom: 10px;
+  font-size: 22px !important;
+  font-weight: bold !important;
+  color: #333 !important;
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px var(--el-input-border-color, var(--el-border-color)) inset;
 }
 </style>
 
