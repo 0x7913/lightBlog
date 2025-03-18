@@ -40,6 +40,12 @@ export const uploadPostImage = async (formData) => {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
+
+//发布文章
+export const createPost = async (data) => {
+  return await request.post('/post/publish', data);
+};
+
 // export const getPosts = async () => {
 //   return await request.get('/post');
 // };

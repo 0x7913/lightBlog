@@ -144,6 +144,19 @@ onBeforeUnmount(() => {
         overflow: hidden;
     }
 
+    // 引用的样式
+    .CodeMirror .cm-quote {
+        font-style: normal !important;
+        color: #555;
+    }
+
+    .editor-preview blockquote,
+    .editor-preview-active blockquote {
+        border-left: 4px solid #ccc;
+        padding-left: 1rem;
+        color: #555;
+    }
+
     /* 行内代码样式 */
     .editor-preview code:not(pre code),
     .editor-preview-active code:not(pre code) {

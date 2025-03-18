@@ -1,15 +1,20 @@
 <template>
   <div class="container">
     <el-input style="width: 100%" v-model="title" placeholder="请输入文章标题..." class="title-input"
-      :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }" />
+      :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }">
+      <template #append>
+        <div @click="publishArticle" style="font-size: 14px; font-weight: 500;cursor: pointer;">发布文章</div>
+      </template>
+    </el-input>
     <MarkdownEditor v-if="content !== null" v-model="content" />
-    <button @click="publishArticle">发布</button>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { ElMessage } from 'element-plus';
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
+import * as BlogApi from '@/api';
 
 const title = ref("");
 const content = ref(null);
@@ -18,11 +23,33 @@ onMounted(() => {
   content.value = ""; // 确保 `content` 赋值后，MarkdownEditor 才会挂载
 });
 
-const publishArticle = () => {
-  console.log("发布文章：", {
-    title: title.value,
-    content: content.value,
-  });
+const publishArticle = async () => {
+  if (!title.value.trim()) {
+    ElMessage.warning("文章标题不能为空！");
+    return;
+  }
+  if (!content.value.trim()) {
+    ElMessage.warning("文章内容不能为空！");
+    return;
+  }
+  try {
+    const payload = {
+      title: title.value,
+      content: content.value
+    };
+
+    const res = await BlogApi.createPost(payload);
+
+    if (res.code === 0) {
+      ElMessage.success("文章发布成功！");
+      //后续跳转到文章详情页，目前还没有文章详情页
+    } else {
+      ElMessage.error("文章发布失败，请重试！");
+    }
+  } catch (error) {
+    console.error("发布失败：", error);
+    ElMessage.error("发布出错，请稍后重试！");
+  }
 };
 </script>
 <style lang="scss" scoped>

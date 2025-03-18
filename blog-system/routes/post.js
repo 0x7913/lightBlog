@@ -1,4 +1,5 @@
 const express = require("express");
+const Post = require('../models/Post'); // 引入 Post 模型
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -53,6 +54,34 @@ router.post("/upload-image",authMiddleware, upload.single("image"), (req, res) =
         res.json({ code: 0, data: { url: fileUrl }, msg: "" });
     } catch (error) {
         res.json({ code: 500, data: null, msg: "服务器错误" });
+    }
+});
+
+// 发布文章接口
+router.post('/publish', authMiddleware, async (req, res) => {
+    try {
+        const { title, content } = req.body;
+
+        // 校验标题和内容
+        if (!title || !content) {
+            return res.status(400).json({ code: 400, msg: '标题和内容不能为空' });
+        }
+
+        // 创建文章
+        const newPost = await Post.create({
+            title,
+            content,
+            userId: req.user.id,  // 使用 authMiddleware 添加的用户 ID
+        });
+
+        res.status(201).json({
+            code: 0,
+            msg: '文章发布成功',
+            data: newPost,
+        });
+    } catch (error) {
+        console.error("发布文章失败:", error);
+        res.status(500).json({ code: 500, msg: '服务器错误' });
     }
 });
 
