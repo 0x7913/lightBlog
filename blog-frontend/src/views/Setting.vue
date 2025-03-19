@@ -25,6 +25,7 @@
                             <el-upload class="avatar-uploader" :show-file-list="false" :http-request="uploadAvatar"
                                 accept="image/*">
                                 <img v-if="avatarUrl" :src="avatarUrl" class="avatar" />
+                                <img v-else :src="Avatar" class="avatar" />
                             </el-upload>
                         </el-form-item>
                     </el-form>
@@ -56,6 +57,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import * as BlogApi from '@/api';
 import { eventBus } from '@/utils/eventBus';
+import Avatar from '@/assets/avatar/avatar.png'
 
 const userInfo = ref(null);
 const avatarUrl = ref('');
@@ -88,7 +90,6 @@ const uploadAvatar = async (fileData: { file: File }) => {
         uploadFormData.append("avatar", fileData.file);
 
         const res = await BlogApi.uploadAvatar(uploadFormData);
-        console.log("接口返回数据:", res);
 
         if (res && res.code === 0) {
             avatarUrl.value = `${LOCAL_BASE_URL}${res.data.avatar}`;

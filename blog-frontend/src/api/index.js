@@ -46,6 +46,11 @@ export const createPost = async (data) => {
   return await request.post('/post/publish', data);
 };
 
+// 获取文章列表
+export const getPostList = async (page = 1, limit = 10) => {
+  return await request.get(`/post/list?page=${page}&limit=${limit}`);
+};
+
 // export const getPosts = async () => {
 //   return await request.get('/post');
 // };

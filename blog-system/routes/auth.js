@@ -1,8 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/User")
-const VerificationCode = require("../models/VerificationCode")
+const { User, VerificationCode } = require("../models"); 
 const { Op } = require("sequelize");
 const nodemailer = require("nodemailer");
 const multer = require("multer");

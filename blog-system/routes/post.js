@@ -1,5 +1,6 @@
 const express = require("express");
-const Post = require('../models/Post'); // 引入 Post 模型
+const { Post, User, Comment } = require("../models"); 
+const { Op, Sequelize } = require('sequelize');
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -84,5 +85,80 @@ router.post('/publish', authMiddleware, async (req, res) => {
         res.status(500).json({ code: 500, msg: '服务器错误' });
     }
 });
+
+/**
+ * 分页加载文章列表，返回评论数量
+ * @route GET /api/post/list
+ * @queryParam {number} page - 当前页码（从1开始）
+ * @queryParam {number} limit - 每次加载数量（默认10）
+ */
+router.get('/list', async (req, res) => {
+    try {
+        let { page = 1, limit = 10 } = req.query;
+        page = parseInt(page);
+        limit = parseInt(limit);
+
+        // 防止非法分页参数
+        if (isNaN(page) || page < 1) page = 1;
+        if (isNaN(limit) || limit < 1) limit = 10;
+
+        const offset = (page - 1) * limit;
+
+        // 查询文章列表，并统计评论数量
+        const { count, rows: posts } = await Post.findAndCountAll({
+            attributes: ['id', 'title', 'createdAt', 'updatedAt'],
+            include: [
+                {
+                    model: User,
+                    attributes: ['username', 'avatar']
+                },
+                {
+                    model: Comment,   // ✅ 使用模型统计评论数量
+                    attributes: [],   // 不返回评论具体内容
+                    duplicating: false // 防止重复文章
+                }
+            ],
+            limit,
+            offset,
+            order: [['createdAt', 'DESC']],
+            group: ['Post.id'],  // 分组防止重复
+            subQuery: false,      // 避免生成子查询
+            raw: true,
+            nest: true,
+            // 统计评论数量
+            attributes: [
+                'id',
+                'title',
+                'createdAt',
+                [Sequelize.fn('COUNT', Sequelize.col('Comments.id')), 'commentCount']
+            ]
+        });
+
+        // 格式化输出
+        const result = posts.map(post => ({
+            id: post.id,
+            title: post.title,
+            author: post.User.username,
+            avatar: post.User.avatar,
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+            commentCount: post.commentCount
+        }));
+
+        res.json({
+            code: 0,
+            msg: '文章列表加载成功',
+            data: {
+                posts: result,
+                hasMore: (page * limit) < count
+            }
+        });
+
+    } catch (error) {
+        console.error("加载文章列表失败:", error);
+        res.status(500).json({ code: 500, msg: '服务器错误' });
+    }
+});
+
 
 module.exports = router;
