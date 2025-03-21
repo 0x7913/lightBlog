@@ -21,7 +21,7 @@ const hasMore = ref(true);
 
 const loadPosts = async () => {
   try {
-    const res = await BlogApi.getPostList({ page: page.value });
+    const res = await BlogApi.getPostList(page.value, 10);
     if (res.code === 0) {
       posts.value.push(...res.data.posts);
       hasMore.value = res.data.hasMore;

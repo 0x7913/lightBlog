@@ -113,7 +113,7 @@ router.get('/list', async (req, res) => {
                     attributes: ['username', 'avatar']
                 },
                 {
-                    model: Comment,   // ✅ 使用模型统计评论数量
+                    model: Comment,   // 使用模型统计评论数量
                     attributes: [],   // 不返回评论具体内容
                     duplicating: false // 防止重复文章
                 }
@@ -150,7 +150,7 @@ router.get('/list', async (req, res) => {
             msg: '文章列表加载成功',
             data: {
                 posts: result,
-                hasMore: (page * limit) < count
+                hasMore: (page * limit) < count.length
             }
         });
 
