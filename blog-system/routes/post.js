@@ -78,7 +78,9 @@ router.post('/publish', authMiddleware, async (req, res) => {
         res.status(201).json({
             code: 0,
             msg: '文章发布成功',
-            data: newPost,
+            data: {
+                id: newPost.id
+            }
         });
     } catch (error) {
         console.error("发布文章失败:", error);
@@ -160,5 +162,51 @@ router.get('/list', async (req, res) => {
     }
 });
 
+/**
+ * 获取文章详情页
+ * @route GET /api/post/:id
+ */
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // 查询文章详情，包含作者信息
+        const post = await Post.findByPk(id, {
+            include: [
+                {
+                    model: User, // 作者信息
+                    attributes: ['username', 'avatar']
+                }
+            ]
+        });
+
+        if (!post) {
+            return res.status(404).json({ code: 404, msg: '文章不存在' });
+        }
+
+        // 格式化输出
+        const result = {
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+            author: {
+                username: post.User.username,
+                avatar: post.User.avatar
+            }
+        };
+
+        res.status(200).json({
+            code: 0,
+            msg: '文章详情获取成功',
+            data: result
+        });
+
+    } catch (error) {
+        console.error('获取文章详情失败:', error);
+        res.status(500).json({ code: 500, msg: '服务器错误' });
+    }
+});
 
 module.exports = router;

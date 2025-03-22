@@ -124,12 +124,15 @@ onBeforeUnmount(() => {
 
 <style lang="scss">
 .EasyMDEContainer {
+    line-height: 1.8;
+    white-space: normal;
+    word-break: break-word;
 
     img {
         max-width: 100%;
-        max-height: 500px;
+        height: auto;
+        border-radius: 4px;
         object-fit: cover;
-        padding: 5px;
     }
 
     .CodeMirror {
@@ -141,7 +144,9 @@ onBeforeUnmount(() => {
     }
 
     .CodeMirror-scroll {
-        overflow: hidden;
+        overflow: auto !important;
+        padding-bottom: 10px;
+        /* 底部留白空间 */
     }
 
     // 引用的样式
@@ -172,15 +177,57 @@ onBeforeUnmount(() => {
     .editor-preview pre code,
     .editor-preview-active pre code {
         background: #282c34;
-        /* 背景颜色 */
         color: #abb2bf;
-        /* 文字颜色 */
         padding: 10px;
-        /* 内边距 */
         border-radius: 4px;
-        /* 圆角边框 */
         display: block;
         overflow-x: auto;
+    }
+
+    /* 表格样式 */
+    .editor-preview table,
+    .editor-preview-active table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+    }
+
+    .editor-preview table th,
+    .editor-preview-active table th {
+        background-color: #f4f4f4;
+        color: #333;
+        font-weight: bold;
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+    }
+
+    .editor-preview table td,
+    .editor-preview-active table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+    }
+
+    /* 链接样式 */
+    .editor-preview a,
+    .editor-preview-active a {
+        color: #1e88e5;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+        border-bottom: 1px solid rgba(30, 136, 229, 0.5);
+    }
+
+    .editor-preview a:hover,
+    .editor-preview-active a:hover {
+        color: #1565c0;
+        border-bottom: 1px solid rgba(21, 101, 192, 0.7);
+    }
+
+    .editor-preview a:active,
+    .editor-preview-active a:active {
+        color: #0d47a1;
     }
 }
 </style>

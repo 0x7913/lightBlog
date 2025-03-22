@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container3">
     <el-input style="width: 100%" v-model="title" placeholder="请输入文章标题..." class="title-input"
       :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }">
       <template #append>
@@ -12,12 +12,14 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import * as BlogApi from '@/api';
 
 const title = ref("");
 const content = ref(null);
+const router = useRouter();
 
 onMounted(() => {
   content.value = ""; // 确保 `content` 赋值后，MarkdownEditor 才会挂载
@@ -42,7 +44,8 @@ const publishArticle = async () => {
 
     if (res.code === 0) {
       ElMessage.success("文章发布成功！");
-      //后续跳转到文章详情页，目前还没有文章详情页
+      // 跳转到文章详情页
+      router.push(`/post/${res.data.id}`);
     } else {
       ElMessage.error("文章发布失败，请重试！");
     }
@@ -53,7 +56,7 @@ const publishArticle = async () => {
 };
 </script>
 <style lang="scss" scoped>
-.container {
+.container3 {
   margin: 0 20%;
   padding-top: 60px;
 }

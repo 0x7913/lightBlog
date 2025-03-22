@@ -51,31 +51,7 @@ export const getPostList = async (page = 1, limit = 10) => {
   return await request.get(`/post/list?page=${page}&limit=${limit}`);
 };
 
-// export const getPosts = async () => {
-//   return await request.get('/post');
-// };
-
-// export const getPostById = async (id) => {
-//   return await request.get(`/post/${id}`);
-// };
-
-// export const createPost = async (data) => {
-//   return await request.post('/post', data);
-// };
-
-// export const deletePost = async (id) => {
-//   return await request.delete(`/post/${id}`);
-// };
-
-// // 评论相关接口
-// export const getComments = async (postId) => {
-//   return await request.get('/comment', { params: { postId } });
-// };
-
-// export const addComment = async (postId, content) => {
-//   return await request.post('/comment', { postId, content });
-// };
-
-// export const deleteComment = async (id) => {
-//   return await request.delete(`/comment/${id}`);
-// };
+// 获取文章详情
+export const getPostDetail = async (postId) => {
+  return await request.get(`/post/${postId}`);
+};

@@ -1,33 +1,27 @@
-// import { defineStore } from "pinia";
-// import * as BlogApi from '@/api';
+import { defineStore } from 'pinia';
 
-// export const useUserStore = defineStore("user", {
-//   state: () => ({
-//     userInfo: null, // 让 Pinia 维护，不手动读写 localStorage
-//   }),
-//   actions: {
-//     setUserInfo(userInfo) {
-//       this.userInfo = userInfo;
-//     },
-//     clearUserInfo() {
-//       this.userInfo = null;
-//     },
-//     async fetchUserInfo() {
-//       try {
-//         const res = await BlogApi.getUserInfo();
-//         this.setUserInfo(res);
-//       } catch (error) {
-//         console.error("获取用户信息失败", error);
-//       }
-//     }
-//   },
-//   persist: {
-//     enabled: true, // 开启持久化
-//     strategies: [
-//       {
-//         key: "userInfo",
-//         storage: localStorage, // 默认 localStorage，也可以用 sessionStorage
-//       },
-//     ],
-//   },
-// });
+export const usePostStore = defineStore('postStore', {
+  state: () => ({
+    posts: [],          // 缓存文章
+    page: 1,            // 当前页码
+    hasMore: true,       // 是否有更多文章
+    scrollTop: 0         // 滚动位置
+  }),
+  actions: {
+    setPosts(newPosts) {
+      this.posts = newPosts;
+    },
+    appendPosts(newPosts) {
+      this.posts.push(...newPosts);
+    },
+    setPage(newPage) {
+      this.page = newPage;
+    },
+    setHasMore(value) {
+      this.hasMore = value;
+    },
+    setScrollTop(value) {
+      this.scrollTop = value;
+    }
+  }
+});

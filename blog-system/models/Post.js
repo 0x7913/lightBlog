@@ -1,6 +1,4 @@
 const { sequelize, DataTypes, Op } = require('../config/db');
-const User = require('./User'); // 引入 User 模型
-const Comment = require('./Comment');
 
 const Post = sequelize.define('Post', {
     id: {

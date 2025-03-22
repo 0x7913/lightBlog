@@ -1,5 +1,5 @@
 <template>
-    <div class="container">
+    <div class="container5">
         <el-menu v-model="activeMenu" class="setting-menu" mode="vertical" @select="handleSelect">
             <el-menu-item class="overview" index="overview">用户</el-menu-item>
             <el-menu-item class="account" index="account">账号</el-menu-item>
@@ -151,7 +151,7 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.container {
+.container5 {
     display: flex;
     align-items: center;
     justify-content: center;
