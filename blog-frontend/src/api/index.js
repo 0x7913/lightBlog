@@ -55,3 +55,19 @@ export const getPostList = async (page = 1, limit = 10) => {
 export const getPostDetail = async (postId) => {
   return await request.get(`/post/${postId}`);
 };
+
+// 评论相关接口
+// 发表评论
+export const createComment = async (postId, data) => {
+  return await request.post(`/comment/${postId}`, data);
+};
+
+// 获取文章评论列表
+export const getCommentList = async (postId) => {
+  return await request.get(`/comment/${postId}`);
+};
+
+// 删除评论
+export const deleteComment = async(commentId) => {
+  return await request.delete(`/comment/${commentId}`);
+};

@@ -15,8 +15,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const authRoutes = require("./routes/auth");
 const postRoutes = require('./routes/post')
+const commentRoutes = require('./routes/comment')
 app.use("/api/auth", authRoutes);
 app.use("/api/post", postRoutes);
+app.use("/api/comment", commentRoutes);
 
 // 监听端口
 app.listen(PORT, () => {

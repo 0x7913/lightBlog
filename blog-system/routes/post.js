@@ -174,27 +174,29 @@ router.get('/:id', async (req, res) => {
         const post = await Post.findByPk(id, {
             include: [
                 {
-                    model: User, // 作者信息
+                    model: User,      // 作者信息
                     attributes: ['username', 'avatar']
                 }
-            ]
+            ],
+            attributes: ['id', 'title', 'content', 'createdAt', 'updatedAt', 'userId']
         });
 
         if (!post) {
             return res.status(404).json({ code: 404, msg: '文章不存在' });
         }
-
-        // 格式化输出
+        const commentCount = await Comment.count({
+            where: { postId: id }
+        });
         const result = {
             id: post.id,
             title: post.title,
             content: post.content,
             createdAt: post.createdAt,
             updatedAt: post.updatedAt,
-            author: {
-                username: post.User.username,
-                avatar: post.User.avatar
-            }
+            userId: post.userId,             //  文章作者ID
+            username: post.User.username,    //  作者用户名
+            avatar: post.User.avatar,        //  作者头像
+            commentCount
         };
 
         res.status(200).json({

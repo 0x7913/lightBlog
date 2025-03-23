@@ -4,16 +4,59 @@
     <div class="center">
       <div class="main-content" v-if="post">
         <div class="post-top">
-          <img :src="post.author.avatar ? 'http://localhost:5000' + post.author.avatar : Avatar" alt="用户头像"
-            class="post-avatar" />
+          <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像" class="post-avatar" />
           <div>
-            <div class="post-author">{{ post.author.username }}</div>
+            <div class="post-author">{{ post.username }}</div>
             <div class="post-time">{{ formatDate(post.createdAt) }}</div>
           </div>
         </div>
         <h1>{{ post.title }}</h1>
         <div class="content markdown-body" v-html="renderedContent"></div>
       </div>
+      <!-- 评论区域 -->
+      <div class="main-comment">
+        <h2>评论（{{ commentCount }}）</h2>
+
+        <!-- 发表评论 -->
+        <div class="comment-form">
+          <textarea v-model="newComment" placeholder="发表你的评论..." class="comment-input"></textarea>
+          <div class="comment-btn-container">
+            <button @click="submitComment" :disabled="!newComment" class="submit-btn">
+              发布评论
+            </button>
+          </div>
+        </div>
+
+        <!-- 评论列表 -->
+        <div class="comment-list" v-if="comments.length">
+          <div v-for="comment in comments" :key="comment.id" class="comment-item">
+            <div class="comment-top">
+              <img :src="comment.User.avatar ? 'http://localhost:5000' + comment.User.avatar : Avatar" alt="用户头像"
+                class="comment-avatar" />
+              <div class="comment-info">
+                <div class="comment-detail">
+                  <div>
+                    <div class="comment-author">{{ comment.User.username }}</div>
+                    <div class="comment-time">{{ formatDate(comment.createdAt) }}</div>
+                  </div>
+                  <div class="dropdown-container" v-if="canDelete(comment)" @click.stop="toggleDropdown(comment.id)">
+                    <div class="menu-icon" :class="{ 'menu-hover': dropdownId === comment.id }">
+                      <Icon icon="codicon:ellipsis" width="16" height="16" />
+                    </div>
+                    <!-- 下拉框 -->
+                    <div v-if="dropdownId === comment.id" class="dropdown-menu">
+                      <button @click="deleteComment(comment.id)" class="dropdown-item">🗑️ 删除</button>
+                    </div>
+                  </div>
+                </div>
+                <p class="comment-content">{{ comment.content }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="no-comment">暂无评论，快来抢沙发吧！</div>
+      </div>
+
     </div>
     <div class="right"></div>
   </div>
@@ -26,9 +69,39 @@ import * as BlogApi from "@/api";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Avatar from "@/assets/avatar/avatar.png";
+import { ElMessageBox, ElMessage } from "element-plus";
 
 const route = useRoute();
 const post = ref(null);
+const comments = ref([]);         // 存储评论列表
+const newComment = ref("");        // 新评论内容
+const commentCount = ref();        // 评论总数
+
+// 用于标记当前展开的评论 ID
+const dropdownId = ref(null);
+
+// 切换下拉菜单显示/隐藏
+const toggleDropdown = (commentId) => {
+  dropdownId.value = dropdownId.value === commentId ? null : commentId;
+};
+
+// 点击外部关闭菜单
+const handleClickOutside = (event) => {
+  // 如果点击区域不在菜单内，关闭菜单
+  if (!event.target.closest(".dropdown-container")) {
+    dropdownId.value = null;
+  }
+};
+
+// 当前用户信息
+const currentUser = ref(JSON.parse(localStorage.getItem("userInfo")));
+
+// 判断当前用户是否有权限删除
+const canDelete = (comment) => {
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));  // 获取当前登录用户信息
+  if (!userInfo || !userInfo.id) return false;
+  return userInfo.id === comment.User.id || userInfo.id === post.value.userId;
+};
 
 // 将 Markdown 转换为安全的 HTML
 const renderedContent = computed(() => {
@@ -45,6 +118,8 @@ const loadPostDetail = async () => {
     const res = await BlogApi.getPostDetail(postId);
     if (res.code === 0) {
       post.value = res.data;
+      commentCount.value = res.data.commentCount;
+      loadComments();
     } else {
       console.error("加载文章失败:", res.msg);
     }
@@ -53,8 +128,77 @@ const loadPostDetail = async () => {
   }
 };
 
+// 加载评论
+const loadComments = async () => {
+  const postId = route.params.id;
+
+  try {
+    const res = await BlogApi.getCommentList(postId);
+    if (res.code === 0) {
+      comments.value = res.data;
+    } else {
+      console.error("加载评论失败:", res.msg);
+    }
+  } catch (error) {
+    console.error("加载评论出错:", error);
+  }
+};
+
+// 提交评论
+const submitComment = async () => {
+  if (!newComment.value.trim()) {
+    ElMessage.warning("评论内容不能为空");
+    return;
+  }
+
+  try {
+    const res = await BlogApi.createComment(post.value.id, {
+      content: newComment.value,
+    });
+    if (res.code === 0) {
+      ElMessage.success("评论发布成功");
+      commentCount.value = res.data.commentCount;
+      newComment.value = "";
+      setTimeout(() => {
+        loadComments();
+      }, 300);  // 延迟加载评论列表
+    } else {
+      ElMessage.error(res.msg || "发布评论失败");
+    }
+  } catch (error) {
+    console.error("发布评论失败:", error);
+    ElMessage.error("服务器错误");
+  }
+};
+
+// 删除评论
+const deleteComment = async (commentId) => {
+  ElMessageBox.confirm("确定要删除这条评论吗？", "提示", {
+    confirmButtonText: "删除",
+    cancelButtonText: "取消",
+    type: "warning"
+  }).then(async () => {
+    try {
+      const res = await BlogApi.deleteComment(commentId);
+      if (res.code === 0) {
+        ElMessage.success("评论删除成功");
+        commentCount.value = res.data.commentCount;
+        loadComments();  // 重新加载评论
+      } else {
+        ElMessage.error(res.msg || "删除失败");
+      }
+    } catch (error) {
+      console.error("删除评论失败:", error);
+      ElMessage.error("服务器错误");
+    }
+  }).catch(() => {
+    console.log("取消删除");
+  });
+};
+
 onMounted(() => {
   loadPostDetail();
+  document.addEventListener("click", handleClickOutside);
 });
 
 const formatDate = (date) => {
@@ -160,29 +304,20 @@ const formatDate = (date) => {
 
     pre {
       background: #282c34;
-      /* 代码块背景色 */
       color: #abb2bf;
-      /* 代码颜色 */
       padding: 15px;
       overflow-x: auto;
       border-radius: 4px;
 
-      /* ✅ 去掉代码块内的行内代码样式 */
       code {
         background: transparent !important;
-        /* 去除背景色 */
         color: inherit !important;
-        /* 继承代码块颜色 */
         padding: 0 !important;
-        /* 去除内边距 */
         border-radius: 0 !important;
-        /* 去除圆角 */
         font-weight: normal !important;
-        /* 恢复字体权重 */
       }
     }
 
-    /* ✅ 普通行内代码样式 */
     code {
       background-color: var(--gray-100);
       color: var(--tw-prose-code);
@@ -222,6 +357,176 @@ const formatDate = (date) => {
       padding: 12px;
       text-align: left;
     }
+  }
+}
+
+.main-comment {
+  padding: 32px 64px;
+  border-radius: 4px;
+  background-color: #ffffff;
+}
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+
+  .comment-input {
+    height: 100px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+    outline: none;
+    font-size: 16px;
+    transition: border 0.2s;
+
+    &:focus {
+      border: 1px solid #007bff;
+    }
+  }
+
+  .comment-btn-container {
+    display: flex;
+    justify-content: flex-end;
+
+    .submit-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      color: #fff;
+      background-color: #007bff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: 0.3s;
+
+      &:hover {
+        background-color: #0056b3;
+      }
+
+      &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/* 评论列表样式 */
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .comment-item {
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+
+    .comment-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+
+      .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        padding: 10px 0;
+      }
+
+      .comment-info {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 10px;
+        border: 1px solid #f0f0f0;
+        border-radius: 4px;
+
+        .comment-detail {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          position: relative;
+
+          .menu-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+
+            &:hover {
+              background: #f6f6f6;
+            }
+          }
+
+          .menu-hover {
+            background: #f6f6f6;
+          }
+
+          .dropdown-container {
+            position: relative;
+            display: inline-block;
+
+            .dropdown-menu {
+              position: absolute;
+              top: 40px;
+              right: 0;
+              background: #fff;
+              border: 1px solid #ccc;
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+              z-index: 10;
+              border-radius: 4px;
+              min-width: 100px;
+              padding: 5px 0;
+            }
+
+            .dropdown-item {
+              display: block;
+              width: 100%;
+              padding: 8px 12px;
+              color: #333;
+              text-align: left;
+              font-size: 14px;
+              cursor: pointer;
+              border: none;
+              background: transparent;
+
+              &:hover {
+                background: #f6f6f6;
+              }
+            }
+          }
+        }
+
+        .comment-author {
+          font-weight: bold;
+          font-size: 14px;
+        }
+
+        .comment-time {
+          font-size: 12px;
+          color: #888;
+        }
+
+        .comment-content {
+          margin-top: 10px;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+      }
+
+    }
+
+  }
+
+  .no-comment {
+    text-align: center;
+    color: #aaa;
   }
 }
 </style>
