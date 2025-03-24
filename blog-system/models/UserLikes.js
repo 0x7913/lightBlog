@@ -10,7 +10,7 @@ const UserLikes = sequelize.define('UserLikes', {
     allowNull: false,
   },
 }, {
-  timestamps: true,
+  timestamps: { createdAt: true, updatedAt: false },
   tableName: 'user_likes',
 });
 

@@ -34,29 +34,38 @@
               <img :src="comment.avatar ? 'http://localhost:5000' + comment.avatar : Avatar" alt="用户头像"
                 class="comment-avatar" />
               <div class="comment-info">
-                <div class="comment-detail">
-                  <div>
-                    <div class="comment-author">{{ comment.username }}</div>
-
+                <div style="border: 1px solid #f0f0f0; border-radius: 4px;padding: 10px;">
+                  <div class="comment-detail">
+                    <div>
+                      <div class="comment-author">{{ comment.username }}</div>
+                    </div>
+                    <!-- 删除评论 -->
+                    <div class="dropdown-container" v-if="canDelete(comment)" @click.stop="toggleDropdown(comment.id)">
+                      <div class="menu-icon" :class="{ 'menu-hover': dropdownId === comment.id }">
+                        <Icon icon="codicon:ellipsis" width="16" height="16" />
+                      </div>
+                      <!-- 下拉框 -->
+                      <div v-if="dropdownId === comment.id" class="dropdown-menu">
+                        <button @click="deleteComment(comment.id)" class="dropdown-item">🗑️ 删除</button>
+                      </div>
+                    </div>
                   </div>
-                  <!-- 删除评论 -->
-                  <div class="dropdown-container" v-if="canDelete(comment)" @click.stop="toggleDropdown(comment.id)">
-                    <div class="menu-icon" :class="{ 'menu-hover': dropdownId === comment.id }">
-                      <Icon icon="codicon:ellipsis" width="16" height="16" />
+                  <p class="comment-content">{{ comment.content }}</p>
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex;gap: 20px;">
+                      <div class="comment-upvote">点赞</div>
+                      <div class="comment-reply" @click="toggleReply(comment.id)">回复</div>
                     </div>
-                    <!-- 下拉框 -->
-                    <div v-if="dropdownId === comment.id" class="dropdown-menu">
-                      <button @click="deleteComment(comment.id)" class="dropdown-item">🗑️ 删除</button>
-                    </div>
+                    <div class="comment-time">{{ formatDate(comment.createdAt) }}</div>
                   </div>
                 </div>
-                <p class="comment-content">{{ comment.content }}</p>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                  <div style="display: flex;gap: 20px;">
-                    <div class="comment-upvote">点赞</div>
-                    <div class="comment-reply">回复</div>
+                <div v-if="replyingCommentId === comment.id" class="comment-form">
+                  <textarea v-model="replyComment" placeholder="输入你的回复..." class="comment-input"></textarea>
+                  <div class="comment-btn-container">
+                    <button @click="submitReply(comment.id)" :disabled="!replyComment" class="submit-btn">
+                      发布评论
+                    </button>
                   </div>
-                  <div class="comment-time">{{ formatDate(comment.createdAt) }}</div>
                 </div>
               </div>
             </div>
@@ -84,6 +93,13 @@ const post = ref(null);
 const comments = ref([]);         // 存储评论列表
 const newComment = ref("");        // 新评论内容
 const commentCount = ref();        // 评论总数
+const replyComment = ref(""); // 回复输入框
+const replyingCommentId = ref(null); // 记录当前正在回复的评论 ID
+
+// 切换回复框的显示
+const toggleReply = (commentId) => {
+  replyingCommentId.value = replyingCommentId.value === commentId ? null : commentId;
+};
 
 // 用于标记当前展开的评论 ID
 const dropdownId = ref(null);
@@ -100,9 +116,6 @@ const handleClickOutside = (event) => {
     dropdownId.value = null;
   }
 };
-
-// 当前用户信息
-const currentUser = ref(JSON.parse(localStorage.getItem("userInfo")));
 
 // 判断当前用户是否有权限删除
 const canDelete = (comment) => {
@@ -160,9 +173,7 @@ const submitComment = async () => {
   }
 
   try {
-    const res = await BlogApi.createComment(post.value.id, {
-      content: newComment.value,
-    });
+    const res = await BlogApi.createComment(post.value.id, newComment.value);
     if (res.code === 0) {
       ElMessage.success("评论发布成功");
       commentCount.value = res.data.commentCount;
@@ -175,6 +186,30 @@ const submitComment = async () => {
     }
   } catch (error) {
     console.error("发布评论失败:", error);
+    ElMessage.error("服务器错误");
+  }
+};
+
+// 提交回复
+const submitReply = async (commentId) => {
+  if (!replyComment.value.trim()) {
+    ElMessage.warning("回复内容不能为空");
+    return;
+  }
+
+  try {
+    const res = await BlogApi.createComment(post.value.id, replyComment.value, commentId);
+
+    if (res.code === 0) {
+      ElMessage.success("回复发布成功");
+      replyComment.value = "";
+      replyingCommentId.value = null;
+      loadComments();
+    } else {
+      ElMessage.error(res.msg || "回复失败");
+    }
+  } catch (error) {
+    console.error("回复失败:", error);
     ElMessage.error("服务器错误");
   }
 };
@@ -378,7 +413,7 @@ const formatDate = (date) => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 20px;
+  margin: 20px 0;
 
   .comment-input {
     height: 100px;
@@ -448,9 +483,7 @@ const formatDate = (date) => {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        padding: 10px;
-        border: 1px solid #f0f0f0;
-        border-radius: 4px;
+
 
         .comment-detail {
           display: flex;
