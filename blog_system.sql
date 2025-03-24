@@ -113,3 +113,8 @@ CREATE TABLE `verificationcodes` (
 -- ----------------------------
 -- Records of verificationcodes
 -- ----------------------------
+
+-- 添加了parentId字段，判断是否为顶层评论
+ALTER TABLE `comments`
+ADD COLUMN `parentId` CHAR(36) NULL DEFAULT NULL AFTER `postId`,
+ADD INDEX (`parentId`);

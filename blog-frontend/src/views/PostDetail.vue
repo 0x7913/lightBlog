@@ -31,14 +31,15 @@
         <div class="comment-list" v-if="comments.length">
           <div v-for="comment in comments" :key="comment.id" class="comment-item">
             <div class="comment-top">
-              <img :src="comment.User.avatar ? 'http://localhost:5000' + comment.User.avatar : Avatar" alt="用户头像"
+              <img :src="comment.avatar ? 'http://localhost:5000' + comment.avatar : Avatar" alt="用户头像"
                 class="comment-avatar" />
               <div class="comment-info">
                 <div class="comment-detail">
                   <div>
-                    <div class="comment-author">{{ comment.User.username }}</div>
-                    <div class="comment-time">{{ formatDate(comment.createdAt) }}</div>
+                    <div class="comment-author">{{ comment.username }}</div>
+
                   </div>
+                  <!-- 删除评论 -->
                   <div class="dropdown-container" v-if="canDelete(comment)" @click.stop="toggleDropdown(comment.id)">
                     <div class="menu-icon" :class="{ 'menu-hover': dropdownId === comment.id }">
                       <Icon icon="codicon:ellipsis" width="16" height="16" />
@@ -50,6 +51,13 @@
                   </div>
                 </div>
                 <p class="comment-content">{{ comment.content }}</p>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <div style="display: flex;gap: 20px;">
+                    <div class="comment-upvote">点赞</div>
+                    <div class="comment-reply">回复</div>
+                  </div>
+                  <div class="comment-time">{{ formatDate(comment.createdAt) }}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -100,7 +108,7 @@ const currentUser = ref(JSON.parse(localStorage.getItem("userInfo")));
 const canDelete = (comment) => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));  // 获取当前登录用户信息
   if (!userInfo || !userInfo.id) return false;
-  return userInfo.id === comment.User.id || userInfo.id === post.value.userId;
+  return userInfo.id === comment.userId || userInfo.id === post.value.userId;
 };
 
 // 将 Markdown 转换为安全的 HTML
@@ -506,17 +514,48 @@ const formatDate = (date) => {
         .comment-author {
           font-weight: bold;
           font-size: 14px;
+
+          &:hover {
+            background: #f6f6f6;
+          }
+        }
+
+        .comment-upvote {
+          font-size: 12px;
+          color: #888;
+          padding: 10px;
+          cursor: pointer;
+          border-radius: 8px;
+
+          &:hover {
+            background: #f6f6f6;
+          }
+        }
+
+        .comment-reply {
+          font-size: 12px;
+          color: #888;
+          padding: 10px;
+          cursor: pointer;
+          border-radius: 8px;
+
+          &:hover {
+            background: #f6f6f6;
+          }
         }
 
         .comment-time {
           font-size: 12px;
           color: #888;
+          padding: 10px;
         }
 
         .comment-content {
           margin-top: 10px;
           font-size: 14px;
           line-height: 1.6;
+          white-space: normal;
+          word-break: break-word;
         }
       }
 

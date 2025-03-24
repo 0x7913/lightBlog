@@ -68,11 +68,20 @@ router.get("/:postId", async (req, res) => {
             ],
             order: [["createdAt", "DESC"]] // 按时间倒序
         });
+        
+        const formattedComments = comments.map(comment => ({
+            id: comment.id,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            userId: comment.User.id,
+            username: comment.User.username,
+            avatar: comment.User.avatar
+        }));
 
         res.status(200).json({
             code: 0,
             msg: "评论加载成功",
-            data: comments
+            data: formattedComments
         });
 
     } catch (error) {

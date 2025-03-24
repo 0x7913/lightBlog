@@ -16,7 +16,7 @@ import Header from "@/components/Header.vue";
   z-index: 10001 !important;
 }
 
-/* 动画效果 */
+/* 动画效果
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;
@@ -25,5 +25,5 @@ import Header from "@/components/Header.vue";
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
+} */
 </style>

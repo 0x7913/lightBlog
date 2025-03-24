@@ -10,6 +10,14 @@ const Comment = sequelize.define('Comment', {
         type: DataTypes.TEXT,
         allowNull: false,
     },
+    parentId: {
+        type: DataTypes.UUID,
+        allowNull: true,  // 顶级评论为 null，子评论有父级 ID
+        references: {
+            model: "comments",
+            key: "id"
+        }
+    },
     userId: {
         type: DataTypes.UUID,
         allowNull: false,

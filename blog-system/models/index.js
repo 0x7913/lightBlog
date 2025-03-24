@@ -16,6 +16,10 @@ Post.hasMany(Comment, { foreignKey: 'postId', onDelete: 'CASCADE' });
 Comment.belongsTo(Post, { foreignKey: 'postId', onDelete: 'CASCADE' });
 Comment.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' });
 
+// 自引用关系：评论可以有子评论（回复）
+Comment.hasMany(Comment, { foreignKey: 'parentId', as: 'replies', onDelete: 'CASCADE' });
+Comment.belongsTo(Comment, { foreignKey: 'parentId', as: 'parent' });
+
 // 文章和标签：多对多
 Post.belongsToMany(Tag, { through: 'post_tags' });
 Tag.belongsToMany(Post, { through: 'post_tags' });
