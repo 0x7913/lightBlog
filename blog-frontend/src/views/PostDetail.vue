@@ -59,7 +59,7 @@
                     <div class="comment-time">{{ formatDate(comment.createdAt) }}</div>
                   </div>
                 </div>
-                <div v-if="replyingCommentId === comment.id" class="comment-form">
+                <div v-if="replyingCommentId[comment.id]" class="comment-form">
                   <textarea v-model="replyComment" placeholder="输入你的回复..." class="comment-input"></textarea>
                   <div class="comment-btn-container">
                     <button @click="submitReply(comment.id)" :disabled="!replyComment" class="submit-btn">
@@ -67,10 +67,58 @@
                     </button>
                   </div>
                 </div>
+                <!-- 回复评论显示 -->
+                <div v-if="comment.replies && comment.replies.length">
+                  <div v-for="reply in comment.replies" :key="reply.id" class="comment-item">
+                    <div class="comment-top">
+                      <img :src="reply.avatar ? 'http://localhost:5000' + reply.avatar : Avatar" alt="用户头像"
+                        class="comment-avatar" />
+                      <div class="comment-info">
+                        <div style="border: 1px solid #f0f0f0; border-radius: 4px;padding: 10px;">
+                          <div class="comment-detail">
+                            <div class="comment-author">
+                              {{ reply.username }}
+                              <span v-if="reply.replyToUsername">回复 {{ reply.replyToUsername
+                              }}</span>
+                            </div>
+                            <div class="dropdown-container" v-if="canDelete(reply)"
+                              @click.stop="toggleDropdown(reply.id)">
+                              <div class="menu-icon" :class="{ 'menu-hover': dropdownId === reply.id }">
+                                <Icon icon="codicon:ellipsis" width="16" height="16" />
+                              </div>
+                              <!-- 下拉框 -->
+                              <div v-if="dropdownId === reply.id" class="dropdown-menu">
+                                <button @click="deleteComment(reply.id)" class="dropdown-item">🗑️ 删除</button>
+                              </div>
+                            </div>
+                          </div>
+                          <p class="comment-content">{{ reply.content }}</p>
+                          <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex;gap: 20px;">
+                              <div class="comment-upvote">点赞</div>
+                              <div class="comment-reply" @click="toggleReply(reply.id, reply.username)">回复</div>
+                            </div>
+                            <div class="comment-time">{{ formatDate(reply.createdAt) }}</div>
+                          </div>
+                        </div>
+                        <div v-if="replyingCommentId[reply.id]" class="comment-form">
+                          <textarea v-model="replyComment" placeholder="输入你的回复..." class="comment-input"></textarea>
+                          <div class="comment-btn-container">
+                            <button @click="submitReply(comment.id, reply.username)" :disabled="!replyComment"
+                              class="submit-btn">
+                              发布评论
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        <!-- 没有评论时的提示 -->
         <div v-else class="no-comment">暂无评论，快来抢沙发吧！</div>
       </div>
 
@@ -94,11 +142,18 @@ const comments = ref([]);         // 存储评论列表
 const newComment = ref("");        // 新评论内容
 const commentCount = ref();        // 评论总数
 const replyComment = ref(""); // 回复输入框
-const replyingCommentId = ref(null); // 记录当前正在回复的评论 ID
+const replyingCommentId = ref({}); // 记录当前正在回复的评论 ID
 
 // 切换回复框的显示
-const toggleReply = (commentId) => {
-  replyingCommentId.value = replyingCommentId.value === commentId ? null : commentId;
+const toggleReply = (commentId, replyToUsername = null) => {
+  // 如果当前点击的是已展开的回复框，则关闭
+  if (replyingCommentId.value[commentId]) {
+    replyingCommentId.value = {};  // 关闭所有输入框
+    replyComment.value = "";
+  } else {
+    replyingCommentId.value = { [commentId]: true };  // 只展开当前的输入框
+    replyComment.value = "";
+  }
 };
 
 // 用于标记当前展开的评论 ID
@@ -191,19 +246,24 @@ const submitComment = async () => {
 };
 
 // 提交回复
-const submitReply = async (commentId) => {
+const submitReply = async (commentId, replyToUsername = null) => {
   if (!replyComment.value.trim()) {
     ElMessage.warning("回复内容不能为空");
     return;
   }
 
   try {
-    const res = await BlogApi.createComment(post.value.id, replyComment.value, commentId);
+    const res = await BlogApi.createComment(
+      post.value.id,
+      replyComment.value,
+      commentId,  // 被回复的评论ID
+      replyToUsername  // 被回复的用户名
+    );
 
     if (res.code === 0) {
       ElMessage.success("回复发布成功");
+      replyingCommentId.value = {};  // 关闭所有输入框
       replyComment.value = "";
-      replyingCommentId.value = null;
       loadComments();
     } else {
       ElMessage.error(res.msg || "回复失败");
@@ -470,6 +530,7 @@ const formatDate = (date) => {
       display: flex;
       align-items: flex-start;
       gap: 10px;
+      margin-top: 10px;
 
       .comment-avatar {
         width: 32px;
@@ -547,10 +608,6 @@ const formatDate = (date) => {
         .comment-author {
           font-weight: bold;
           font-size: 14px;
-
-          &:hover {
-            background: #f6f6f6;
-          }
         }
 
         .comment-upvote {
@@ -589,6 +646,7 @@ const formatDate = (date) => {
           line-height: 1.6;
           white-space: normal;
           word-break: break-word;
+          white-space: pre-wrap;
         }
       }
 

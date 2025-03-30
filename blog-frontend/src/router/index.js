@@ -7,8 +7,8 @@ import Setting from "../views/Setting.vue";
 
 //后续会优化为懒加载
 const routes = [
-    { path: "/", component: Home , meta: { noAuth: true } },     //首页(未登录不做拦截)
-    { path: "/post/:id", component: PostDetail , meta: { noAuth: true }},   //文章详情页(未登录不做拦截)
+    { path: "/", component: Home ,name: 'home', meta: { noAuth: true } },     //首页(未登录不做拦截)
+    { path: "/post/:id", component: PostDetail ,name: 'post', meta: { noAuth: true }},   //文章详情页(未登录不做拦截)
     { path: "/create", component: Create },     //文章创建页
     { path: "/profile", component: Profile },       //个人页面
     { path: "/setting", component: Setting },       //设置页面

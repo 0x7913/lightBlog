@@ -25,32 +25,12 @@ Post.belongsToMany(Tag, { through: 'post_tags' });
 Tag.belongsToMany(Post, { through: 'post_tags' });
 
 // 用户与文章的多对多关系（点赞）
-User.belongsToMany(Post, {
-    through: UserLikes,
-    foreignKey: 'userId',
-    otherKey: 'postId',
-    onDelete: 'CASCADE',
-  });
-  Post.belongsToMany(User, {
-    through: UserLikes,
-    foreignKey: 'postId',
-    otherKey: 'userId',
-    onDelete: 'CASCADE',
-  });
+User.belongsToMany(Post, {through: UserLikes,foreignKey: 'userId',otherKey: 'postId',onDelete: 'CASCADE',});
+Post.belongsToMany(User, {through: UserLikes,foreignKey: 'postId',otherKey: 'userId',onDelete: 'CASCADE',});
   
-  // 用户与文章的多对多关系（收藏）
-  User.belongsToMany(Post, {
-    through: UserFavorites,
-    foreignKey: 'userId',
-    otherKey: 'postId',
-    onDelete: 'CASCADE',
-  });
-  Post.belongsToMany(User, {
-    through: UserFavorites,
-    foreignKey: 'postId',
-    otherKey: 'userId',
-    onDelete: 'CASCADE',
-  });
+// 用户与文章的多对多关系（收藏）
+User.belongsToMany(Post, {through: UserFavorites,foreignKey: 'userId',otherKey: 'postId',onDelete: 'CASCADE',});
+Post.belongsToMany(User, {through: UserFavorites,foreignKey: 'postId',otherKey: 'userId',onDelete: 'CASCADE',});
 
 // 导出模型和 sequelize 实例
 module.exports = {

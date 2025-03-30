@@ -10,7 +10,7 @@ const router = express.Router();
  */
 router.post("/:postId", authMiddleware, async (req, res) => {
     const { postId } = req.params;
-    const { content, parentId } = req.body;  // 允许 parentId 为空
+    const { content, parentId, replyToUsername } = req.body;  // 允许携带 parentId 和 replyToUsername
 
     if (!content.trim()) {
         return res.status(400).json({ code: 400, msg: "评论内容不能为空" });
@@ -36,7 +36,8 @@ router.post("/:postId", authMiddleware, async (req, res) => {
             content,
             postId,
             userId: req.user.id,
-            parentId: parentId || null
+            parentId: parentId || null,
+            replyToUsername: replyToUsername || null, 
         });
 
         const commentCount = await Comment.count({
@@ -46,7 +47,9 @@ router.post("/:postId", authMiddleware, async (req, res) => {
         res.status(201).json({
             code: 0,
             msg: "评论发布成功",
-            data: { commentCount }
+            data: { 
+                commentCount,
+            }
         });
 
     } catch (error) {
@@ -66,7 +69,7 @@ router.get("/:postId", async (req, res) => {
         // 查询评论及其回复
         const comments = await Comment.findAll({
             where: { postId, parentId: null }, // 只查顶级评论
-            attributes: ['id', 'content', 'createdAt'],
+            attributes: ["id", "content", "createdAt", "replyToUsername"],
             include: [
                 {
                     model: User,
@@ -75,7 +78,7 @@ router.get("/:postId", async (req, res) => {
                 {
                     model: Comment, 
                     as: "replies",
-                    attributes: ["id", "content", "createdAt", "userId", "parentId"],
+                    attributes: ["id", "content", "createdAt", "userId", "parentId", "replyToUsername"],
                     include: {
                         model: User,
                         attributes: ["id", "username", "avatar"]
@@ -98,7 +101,8 @@ router.get("/:postId", async (req, res) => {
                 createdAt: reply.createdAt,
                 userId: reply.User.id,
                 username: reply.User.username,
-                avatar: reply.User.avatar
+                avatar: reply.User.avatar,
+                replyToUsername: reply.replyToUsername
             }))
         }));
 

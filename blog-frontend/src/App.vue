@@ -16,6 +16,10 @@ import Header from "@/components/Header.vue";
   z-index: 10001 !important;
 }
 
+body {
+  overflow-y: scroll;
+}
+
 /* 动画效果
 .fade-enter-active,
 .fade-leave-active {

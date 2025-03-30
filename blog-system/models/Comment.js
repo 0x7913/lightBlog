@@ -26,6 +26,10 @@ const Comment = sequelize.define('Comment', {
         type: DataTypes.UUID,
         allowNull: false,
     },
+    replyToUsername: {
+        type: DataTypes.STRING,
+        allowNull: true, // 仅子评论有值，顶级评论为 null
+    }
 }, {
     timestamps: true,
 });
