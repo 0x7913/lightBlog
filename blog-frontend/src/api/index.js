@@ -58,8 +58,8 @@ export const getPostDetail = async (postId) => {
 
 // 评论相关接口
 // 发表评论
-export const createComment = async (postId, content, parentId = null) => {
-  return await request.post(`/comment/${postId}`, { content, parentId });
+export const createComment = async (postId, content, parentId = null, replyToUsername = null) => {
+  return await request.post(`/comment/${postId}`, { content, parentId, replyToUsername });
 };
 
 // 获取文章评论列表
