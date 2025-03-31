@@ -13,7 +13,10 @@
         <div class="post-content">
           <h3>{{ post.title }}</h3>
           <div>标签</div>
-          <div>喜欢和评论数</div>
+          <div class="post-active">
+            <div>喜欢</div>
+            <div>评论</div>
+          </div>
         </div>
       </div>
 
@@ -218,6 +221,13 @@ const formatDate = (date) => {
     }
 
     padding-left: 46px;
+
+    .post-active {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 10px;
+      color: #666;
+    }
   }
 }
 
