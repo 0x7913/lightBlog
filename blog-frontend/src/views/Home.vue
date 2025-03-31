@@ -121,6 +121,7 @@ onMounted(() => {
 
     nextTick(() => {
       window.scrollTo(0, store.scrollTop);
+      initObserver();
     });
   } else {
     // 没有缓存数据，加载新文章
