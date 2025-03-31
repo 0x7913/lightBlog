@@ -21,25 +21,55 @@ Comment.hasMany(Comment, { foreignKey: 'parentId', as: 'replies', onDelete: 'CAS
 Comment.belongsTo(Comment, { foreignKey: 'parentId', as: 'parent' });
 
 // 文章和标签：多对多
-Post.belongsToMany(Tag, { through: 'post_tags' });
-Tag.belongsToMany(Post, { through: 'post_tags' });
+Post.belongsToMany(Tag, { through: 'post_tags', as: 'Tags' });
+Tag.belongsToMany(Post, { through: 'post_tags', as: 'Posts' });
 
 // 用户与文章的多对多关系（点赞）
-User.belongsToMany(Post, {through: UserLikes,foreignKey: 'userId',otherKey: 'postId',onDelete: 'CASCADE',});
-Post.belongsToMany(User, {through: UserLikes,foreignKey: 'postId',otherKey: 'userId',onDelete: 'CASCADE',});
+User.belongsToMany(Post, { 
+  through: UserLikes, 
+  as: 'LikedPosts', 
+  foreignKey: 'userId', 
+  otherKey: 'postId', 
+  onDelete: 'CASCADE'
+});
+Post.belongsToMany(User, { 
+  through: UserLikes, 
+  as: 'LikedUsers', 
+  foreignKey: 'postId', 
+  otherKey: 'userId', 
+  onDelete: 'CASCADE'
+});
   
 // 用户与文章的多对多关系（收藏）
-User.belongsToMany(Post, {through: UserFavorites,foreignKey: 'userId',otherKey: 'postId',onDelete: 'CASCADE',});
-Post.belongsToMany(User, {through: UserFavorites,foreignKey: 'postId',otherKey: 'userId',onDelete: 'CASCADE',});
+User.belongsToMany(Post, { 
+  through: UserFavorites, 
+  as: 'FavoritedPosts', 
+  foreignKey: 'userId', 
+  otherKey: 'postId', 
+  onDelete: 'CASCADE'
+});
+Post.belongsToMany(User, { 
+  through: UserFavorites, 
+  as: 'FavoritedUsers', 
+  foreignKey: 'postId', 
+  otherKey: 'userId', 
+  onDelete: 'CASCADE'
+});
 
-// 导出模型和 sequelize 实例
+// 如果希望直接查询 UserLikes 和 UserFavorites 并包含 User 和 Post 信息，也添加反向关联：
+UserLikes.belongsTo(User, { foreignKey: 'userId', as: 'User' });
+UserLikes.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+
+UserFavorites.belongsTo(User, { foreignKey: 'userId', as: 'User' });
+UserFavorites.belongsTo(Post, { foreignKey: 'postId', as: 'Post' });
+
 module.exports = {
-    sequelize,
-    User,
-    Post,
-    Comment,
-    VerificationCode,
-    UserLikes,
-    UserFavorites,
-    Tag
+  sequelize,
+  User,
+  Post,
+  Comment,
+  VerificationCode,
+  UserLikes,
+  UserFavorites,
+  Tag
 };

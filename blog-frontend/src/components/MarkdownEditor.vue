@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch, defineProps, defineEmits } from "vue";
+import { onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { ElMessage } from 'element-plus';
 import EasyMDE from "easymde";
 import "easymde/dist/easymde.min.css";

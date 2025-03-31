@@ -10,7 +10,7 @@ const UserFavorites = sequelize.define('UserFavorites', {
     allowNull: false,
   },
 }, {
-  timestamps: { createdAt: true, updatedAt: false },
+  timestamps: true,
   tableName: 'user_favorites',
 });
 

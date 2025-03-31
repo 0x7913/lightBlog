@@ -1,5 +1,5 @@
 const express = require("express");
-const { Post, User, Comment } = require("../models"); 
+const { Post, User, Comment, UserLikes, UserFavorites } = require("../models"); 
 const { Op, Sequelize } = require('sequelize');
 const multer = require("multer");
 const path = require("path");
@@ -100,51 +100,76 @@ router.get('/list', async (req, res) => {
         page = parseInt(page);
         limit = parseInt(limit);
 
-        // 防止非法分页参数
         if (isNaN(page) || page < 1) page = 1;
         if (isNaN(limit) || limit < 1) limit = 10;
 
         const offset = (page - 1) * limit;
 
-        // 查询文章列表，并统计评论数量
-        const { count, rows: posts } = await Post.findAndCountAll({
-            attributes: ['id', 'title', 'createdAt', 'updatedAt'],
+        // 查询文章列表，同时统计评论、点赞和收藏数量
+        const posts = await Post.findAll({
+            attributes: [
+                'id',
+                'title',
+                'createdAt',
+                // 统计评论数
+                [Sequelize.literal('(SELECT COUNT(*) FROM Comments WHERE Comments.postId = Post.id)'), 'commentCount'],
+                // 统计点赞数
+                [Sequelize.literal('(SELECT COUNT(*) FROM user_likes WHERE user_likes.postId = Post.id)'), 'likeCount'],
+                // 统计收藏数
+                [Sequelize.literal('(SELECT COUNT(*) FROM user_favorites WHERE user_favorites.postId = Post.id)'), 'favoriteCount']
+            ],
             include: [
                 {
                     model: User,
                     attributes: ['username', 'avatar']
-                },
-                {
-                    model: Comment,   // 使用模型统计评论数量
-                    attributes: [],   // 不返回评论具体内容
-                    duplicating: false // 防止重复文章
                 }
             ],
             limit,
             offset,
             order: [['createdAt', 'DESC']],
-            group: ['Post.id'],  // 分组防止重复
-            subQuery: false,      // 避免生成子查询
             raw: true,
-            nest: true,
-            // 统计评论数量
-            attributes: [
-                'id',
-                'title',
-                'createdAt',
-                [Sequelize.fn('COUNT', Sequelize.col('Comments.id')), 'commentCount']
-            ]
+            nest: true
         });
 
-        // 格式化输出
-        const result = posts.map(post => ({
-            id: post.id,
-            title: post.title,
-            author: post.User.username,
-            avatar: post.User.avatar,
-            createdAt: post.createdAt,
-            updatedAt: post.updatedAt,
-            commentCount: post.commentCount
+        // 针对每篇文章检查当前登录用户是否已点赞或收藏
+        const result = await Promise.all(posts.map(async (post) => {
+            let userLiked = false;
+            let userFavorited = false;
+            if (req.user) {
+                // 直接查询关联表而不是 Post.count 以优化性能
+                userLiked = await User.findOne({
+                    include: [{
+                        model: Post,
+                        as: 'LikedPosts',
+                        where: { id: post.id }
+                    }],
+                    where: { id: req.user.id },
+                    limit: 1
+                }) !== null;
+
+                userFavorited = await User.findOne({
+                    include: [{
+                        model: Post,
+                        as: 'FavoritedPosts',
+                        where: { id: post.id }
+                    }],
+                    where: { id: req.user.id },
+                    limit: 1
+                }) !== null;
+            }
+
+            return {
+                id: post.id,
+                title: post.title,
+                author: post.User.username,
+                avatar: post.User.avatar,
+                createdAt: post.createdAt,
+                commentCount: post.commentCount,
+                likeCount: post.likeCount,
+                favoriteCount: post.favoriteCount,
+                userLiked,
+                userFavorited
+            };
         }));
 
         res.json({
@@ -152,7 +177,7 @@ router.get('/list', async (req, res) => {
             msg: '文章列表加载成功',
             data: {
                 posts: result,
-                hasMore: (page * limit) < count.length
+                hasMore: result.length === limit
             }
         });
 
@@ -184,19 +209,38 @@ router.get('/:id', async (req, res) => {
         if (!post) {
             return res.status(404).json({ code: 404, msg: '文章不存在' });
         }
-        const commentCount = await Comment.count({
-            where: { postId: id }
-        });
+
+        // 统计评论、点赞和收藏数量
+        const commentCount = await Comment.count({ where: { postId: id } });
+        const likeCount = await UserLikes.count({ where: { postId: id } });
+        const favoriteCount = await UserFavorites.count({ where: { postId: id } });
+
+        // 如果用户登录，判断当前用户是否已点赞或收藏
+        let userLiked = false;
+        let userFavorited = false;
+        if (req.user) {
+            userLiked = await UserLikes.findOne({
+                where: { postId: id, userId: req.user.id }
+            }) !== null;
+            userFavorited = await UserFavorites.findOne({
+                where: { postId: id, userId: req.user.id }
+            }) !== null;
+        }
+
         const result = {
             id: post.id,
             title: post.title,
             content: post.content,
             createdAt: post.createdAt,
             updatedAt: post.updatedAt,
-            userId: post.userId,             //  文章作者ID
-            username: post.User.username,    //  作者用户名
-            avatar: post.User.avatar,        //  作者头像
-            commentCount
+            userId: post.userId,              // 文章作者ID
+            username: post.User.username,     // 作者用户名
+            avatar: post.User.avatar,         // 作者头像
+            commentCount,
+            likeCount,
+            favoriteCount,
+            userLiked,
+            userFavorited
         };
 
         res.status(200).json({
@@ -204,11 +248,9 @@ router.get('/:id', async (req, res) => {
             msg: '文章详情获取成功',
             data: result
         });
-
     } catch (error) {
         console.error('获取文章详情失败:', error);
         res.status(500).json({ code: 500, msg: '服务器错误' });
     }
 });
-
 module.exports = router;

@@ -79,7 +79,7 @@
                             <div class="comment-author">
                               {{ reply.username }}
                               <span v-if="reply.replyToUsername">回复 {{ reply.replyToUsername
-                              }}</span>
+                                }}</span>
                             </div>
                             <div class="dropdown-container" v-if="canDelete(reply)"
                               @click.stop="toggleDropdown(reply.id)">
@@ -262,6 +262,7 @@ const submitReply = async (commentId, replyToUsername = null) => {
 
     if (res.code === 0) {
       ElMessage.success("回复发布成功");
+      commentCount.value = res.data.commentCount;
       replyingCommentId.value = {};  // 关闭所有输入框
       replyComment.value = "";
       loadComments();
