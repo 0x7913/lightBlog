@@ -1,6 +1,4 @@
 const { sequelize, DataTypes, Op } = require('../config/db');
-const User = require('./User');
-const Post = require('./Post');
 
 const Comment = sequelize.define('Comment', {
     id: {
@@ -12,6 +10,14 @@ const Comment = sequelize.define('Comment', {
         type: DataTypes.TEXT,
         allowNull: false,
     },
+    parentId: {
+        type: DataTypes.UUID,
+        allowNull: true,  // 顶级评论为 null，子评论有父级 ID
+        references: {
+            model: "comments",
+            key: "id"
+        }
+    },
     userId: {
         type: DataTypes.UUID,
         allowNull: false,
@@ -20,11 +26,12 @@ const Comment = sequelize.define('Comment', {
         type: DataTypes.UUID,
         allowNull: false,
     },
+    replyToUsername: {
+        type: DataTypes.STRING,
+        allowNull: true, // 仅子评论有值，顶级评论为 null
+    }
 }, {
     timestamps: true,
 });
-
-Comment.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' });
-Comment.belongsTo(Post, { foreignKey: 'postId', onDelete: 'CASCADE' });
 
 module.exports = Comment;

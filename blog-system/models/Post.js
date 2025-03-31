@@ -1,5 +1,4 @@
 const { sequelize, DataTypes, Op } = require('../config/db');
-const User = require('./User'); // 引入 User 模型
 
 const Post = sequelize.define('Post', {
     id: {
@@ -22,7 +21,5 @@ const Post = sequelize.define('Post', {
 }, {
     timestamps: true,
 });
-
-Post.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' }); // 外键关联
 
 module.exports = Post;

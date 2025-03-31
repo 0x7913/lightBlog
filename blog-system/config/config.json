@@ -1,0 +1,10 @@
+{
+    "development": {
+      "username": "root",
+      "password": "031123",
+      "database": "blog_system",
+      "host": "127.0.0.1",
+      "dialect": "mysql"
+    }
+}
+  
