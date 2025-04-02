@@ -14,8 +14,27 @@
           <h3>{{ post.title }}</h3>
           <div>标签</div>
           <div class="post-active">
-            <div>喜欢</div>
-            <div>评论</div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+              <div style="display: flex; gap: 5px; align-items: center;">
+                <Icon icon="ic:sharp-favorite" width="17px" height="17px" style="color: #fff" stroke-width="1"
+                  stroke="#000" />
+                {{ post.likeCount }}
+                喜欢
+              </div>
+              <div style="display: flex; gap: 5px; align-items: center;">
+                <Icon icon="gravity-ui:comment-fill" width="16px" height="16px" style="color: #fff" stroke-width="0.7"
+                  stroke="#000" />
+                {{ post.commentCount }}
+                评论
+              </div>
+            </div>
+            <div style="display: flex; gap: 5px; align-items: center;">
+              {{ post.favoriteCount }}
+              <!-- <Icon icon="clarity:favorite-solid" width="16px" height="16px" style="color: #fff" stroke-width="1"
+                stroke="#000" /> -->
+              <Icon icon="fontisto:favorite" width="16px" height="16px" style="color: #fff" stroke-width="1"
+                stroke="#000" />
+            </div>
           </div>
         </div>
       </div>
@@ -224,9 +243,11 @@ const formatDate = (date) => {
 
     .post-active {
       display: flex;
-      justify-content: flex-start;
+      justify-content: space-between;
+      align-items: center;
       margin-top: 10px;
       color: #666;
+      font-size: 12px;
     }
   }
 }
