@@ -67,11 +67,11 @@ onMounted(() => {
                 { name: "code", action: EasyMDE.toggleCodeBlock, className: "fa fa-code", title: "代码" },
                 {
                     name: "inline-code", action: function (editor) {
-                        var cm = editor.codemirror;
-                        var selection = cm.getSelection();
+                        let cm = editor.codemirror;
+                        let selection = cm.getSelection();
                         cm.replaceSelection('`' + selection + '`');
                         if (!selection) {
-                            var cursorPos = cm.getCursor();
+                            let cursorPos = cm.getCursor();
                             cm.setCursor(cursorPos.line, cursorPos.ch - 1);
                         }
                         cm.focus();

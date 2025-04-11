@@ -45,7 +45,7 @@ const publishArticle = async () => {
     if (res.code === 0) {
       ElMessage.success("文章发布成功！");
       // 跳转到文章详情页
-      router.push(`/post/${res.data.id}`);
+      await router.push(`/post/${res.data.id}`);
     } else {
       ElMessage.error("文章发布失败，请重试！");
     }

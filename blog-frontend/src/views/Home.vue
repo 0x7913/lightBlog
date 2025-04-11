@@ -15,24 +15,24 @@
           <div>标签</div>
           <div class="post-active">
             <div style="display: flex; gap: 20px; align-items: center;">
-              <div style="display: flex; gap: 5px; align-items: center;">
-                <Icon icon="ic:sharp-favorite" width="17px" height="17px" style="color: #fff" stroke-width="1"
+              <div @click.stop="handleLike(post)" class="flex-center">
+                <Icon icon="ic:sharp-favorite" width="17px" height="17px" :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1"
                   stroke="#000" />
                 {{ post.likeCount }}
                 喜欢
               </div>
-              <div style="display: flex; gap: 5px; align-items: center;">
+              <div class="flex-center">
                 <Icon icon="gravity-ui:comment-fill" width="16px" height="16px" style="color: #fff" stroke-width="0.7"
                   stroke="#000" />
                 {{ post.commentCount }}
                 评论
               </div>
             </div>
-            <div style="display: flex; gap: 5px; align-items: center;">
+            <div @click.stop="handleFavorite(post)" class="flex-center">
               {{ post.favoriteCount }}
               <!-- <Icon icon="clarity:favorite-solid" width="16px" height="16px" style="color: #fff" stroke-width="1"
                 stroke="#000" /> -->
-              <Icon icon="fontisto:favorite" width="16px" height="16px" style="color: #fff" stroke-width="1"
+              <Icon icon="fontisto:favorite" width="16px" height="16px" :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
                 stroke="#000" />
             </div>
           </div>
@@ -53,6 +53,7 @@ import { useRouter } from 'vue-router';
 import { usePostStore } from '@/store/index';
 import Avatar from '@/assets/avatar/avatar.png'
 import * as BlogApi from '@/api';
+import { eventBus } from '@/utils/eventBus';
 
 const store = usePostStore();
 const posts = ref([]);
@@ -94,7 +95,7 @@ const loadPosts = async () => {
     loading.value = false;
 
     // 等待 DOM 渲染后再监听
-    nextTick(() => {
+    await nextTick(() => {
       initObserver();
     });
   }
@@ -132,6 +133,53 @@ const initObserver = () => {
   observer.observe(observerTarget.value);
 };
 
+const handleLike = async (post) => {
+  try {
+    const res = await BlogApi.toggleLike(post.id);
+    if (res.code === 0) {
+      await refreshPostStatus(post);
+    }
+  } catch (err) {
+    console.error('点赞失败:', err);
+  }
+};
+
+const handleFavorite = async (post) => {
+  try {
+    const res = await BlogApi.toggleFavorite(post.id);
+    if (res.code === 0) {
+      await refreshPostStatus(post);
+    }
+  } catch (err) {
+    console.error('收藏失败:', err);
+  }
+};
+
+// 刷新文章的状态
+const refreshPostStatus = async (post) => {
+  try {
+    const res = await BlogApi.getPostDetail(post.id);
+    if (res.code === 0) {
+      const updatedPost = res.data;
+
+      // 找到 posts 中对应项的索引，并替换为新的对象（强响应式）
+      const index = posts.value.findIndex(p => p.id === post.id);
+      if (index !== -1) {
+        posts.value[index] = {
+          ...posts.value[index],
+          userLiked: updatedPost.userLiked,
+          userFavorited: updatedPost.userFavorited,
+          likeCount: updatedPost.likeCount,
+          favoriteCount: updatedPost.favoriteCount
+        };
+      }
+    }
+  } catch (err) {
+    console.error('刷新文章状态失败:', err);
+  }
+};
+
+//TODO:后续将直接刷新页面，重新调用函数，不再使用pinia缓存
 // 页面加载时触发
 onMounted(() => {
   // 检查 Pinia 中是否有缓存
@@ -149,6 +197,13 @@ onMounted(() => {
     // 没有缓存数据，加载新文章
     loadPosts();
   }
+  // 监听刷新事件
+  eventBus.on('refresh-posts', () => {
+    posts.value = [];
+    page.value = 1;
+    hasMore.value = true;
+    loadPosts();
+  });
 });
 
 // 监听滚动，保存滚动位置
@@ -168,6 +223,7 @@ onUnmounted(() => {
   }
   // 移除滚动监听
   window.removeEventListener('scroll', saveScrollPosition);
+  eventBus.off('refresh-posts');
 });
 const formatDate = (date) => {
   const d = new Date(date);
@@ -248,6 +304,19 @@ const formatDate = (date) => {
       margin-top: 10px;
       color: #666;
       font-size: 12px;
+      .flex-center {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        padding: 4px 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        user-select: none; // 禁止文本选中
+        &:hover {
+          background-color: #f6f6f6;
+        }
+      }
     }
   }
 }

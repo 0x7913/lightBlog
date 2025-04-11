@@ -9,6 +9,11 @@ const UserLikes = sequelize.define('UserLikes', {
     type: DataTypes.UUID,
     allowNull: false,
   },
+  status: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  }
 }, {
   timestamps: true,
   tableName: 'user_likes',

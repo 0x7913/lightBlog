@@ -188,7 +188,8 @@ const handleLogin = () => {
             const res = await BlogApi.login(loginForm.value);
             localStorage.setItem("token", res.data.token);
             ElMessage.success("登录成功");
-            fetchUserInfo();
+            await fetchUserInfo();
+            eventBus.emit('refresh-posts');
             showLogin.value = false;
         } catch (error) {
             ElMessage.error("登录失败，请检查邮箱和密码");
@@ -242,12 +243,14 @@ const goToCreate = () => {
     router.push("/create");
 }
 const toHome = () => {
+    eventBus.emit('refresh-posts');
     router.push("/");
 }
 const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
     userInfo.value = null;
+    eventBus.emit('refresh-posts');
     ElMessage.success("退出成功");
     router.push("/");
 }
@@ -275,9 +278,9 @@ onUnmounted(() => {
     width: 100%;
     height: 56px;
     position: fixed;
-    top: 0px;
-    left: 0px;
-    right: 0px;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 10000;
     border-bottom: 1px solid #d1d9e0;
 

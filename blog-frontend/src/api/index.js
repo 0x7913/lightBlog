@@ -71,3 +71,13 @@ export const getCommentList = async (postId) => {
 export const deleteComment = async(commentId) => {
   return await request.delete(`/comment/${commentId}`);
 };
+
+// 点赞或取消点赞（需要登录）
+export const toggleLike = async (postId) => {
+  return await request.post(`/likeFavorite/like/${postId}`);
+};
+
+// 收藏或取消收藏（需要登录）
+export const toggleFavorite = async (postId) => {
+  return await request.post(`/likeFavorite/favorite/${postId}`);
+};

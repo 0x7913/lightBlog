@@ -1,6 +1,6 @@
 const express = require("express");
 const { Comment, User, Post } = require("../models");
-const authMiddleware = require("../middleware/authMiddleware");
+const { authMiddleware, optional } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 /**
@@ -37,7 +37,7 @@ router.post("/:postId", authMiddleware, async (req, res) => {
             postId,
             userId: req.user.id,
             parentId: parentId || null,
-            replyToUsername: replyToUsername || null, 
+            replyToUsername: replyToUsername || null,
         });
 
         const commentCount = await Comment.count({
@@ -47,7 +47,7 @@ router.post("/:postId", authMiddleware, async (req, res) => {
         res.status(201).json({
             code: 0,
             msg: "评论发布成功",
-            data: { 
+            data: {
                 commentCount,
             }
         });
@@ -76,7 +76,7 @@ router.get("/:postId", async (req, res) => {
                     attributes: ["id", "username", "avatar"]
                 },
                 {
-                    model: Comment, 
+                    model: Comment,
                     as: "replies",
                     attributes: ["id", "content", "createdAt", "userId", "parentId", "replyToUsername"],
                     include: {

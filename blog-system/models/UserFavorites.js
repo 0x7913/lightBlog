@@ -9,6 +9,11 @@ const UserFavorites = sequelize.define('UserFavorites', {
     type: DataTypes.UUID,
     allowNull: false,
   },
+  status: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  }
 }, {
   timestamps: true,
   tableName: 'user_favorites',

@@ -5,7 +5,7 @@ import Create from "@/views/Create.vue";
 import Profile from "@/views/Profile.vue";
 import Setting from "../views/Setting.vue";
 
-//后续会优化为懒加载
+//TODO:后续优化为懒加载
 const routes = [
     { path: "/", component: Home ,name: 'home', meta: { noAuth: true } },     //首页(未登录不做拦截)
     { path: "/post/:id", component: PostDetail ,name: 'post', meta: { noAuth: true }},   //文章详情页(未登录不做拦截)
@@ -13,7 +13,7 @@ const routes = [
     { path: "/profile", component: Profile },       //个人页面
     { path: "/setting", component: Setting },       //设置页面
   ];
-  
+
   const router = createRouter({
     history: createWebHistory(),
     routes,
@@ -31,5 +31,5 @@ router.beforeEach((to, from, next) => {
         next(); // 允许访问
     }
 });
-  
+
   export default router;

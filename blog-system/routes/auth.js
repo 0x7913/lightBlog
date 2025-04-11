@@ -1,13 +1,13 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { User, VerificationCode } = require("../models"); 
+const { User, VerificationCode } = require("../models");
 const { Op } = require("sequelize");
 const nodemailer = require("nodemailer");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const authMiddleware = require("../middleware/authMiddleware");
+const { authMiddleware, optional } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -108,7 +108,7 @@ router.get("/me", authMiddleware, async (req, res) => {
     if (!token) return res.json({ code: 401, data: null, msg: "未提供 Token" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.id, { 
+    const user = await User.findByPk(decoded.id, {
       attributes: ["id", "username", "email", "avatar"]
     });
 

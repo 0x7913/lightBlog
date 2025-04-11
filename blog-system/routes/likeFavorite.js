@@ -1,6 +1,6 @@
 const express = require("express");
 const { UserLikes, UserFavorites, Post } = require("../models");
-const authMiddleware = require("../middleware/authMiddleware");
+const { authMiddleware, optional } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 /**
@@ -10,7 +10,7 @@ const router = express.Router();
 router.post("/like/:postId", authMiddleware, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
-    
+
     try {
         const post = await Post.findByPk(postId);
         if (!post) return res.status(404).json({ code: 404, msg: "文章不存在" });
@@ -35,7 +35,7 @@ router.post("/like/:postId", authMiddleware, async (req, res) => {
 router.post("/favorite/:postId", authMiddleware, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
-    
+
     try {
         const post = await Post.findByPk(postId);
         if (!post) return res.status(404).json({ code: 404, msg: "文章不存在" });

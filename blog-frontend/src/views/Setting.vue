@@ -24,8 +24,8 @@
                         <el-form-item label="头像">
                             <el-upload class="avatar-uploader" :show-file-list="false" :http-request="uploadAvatar"
                                 accept="image/*">
-                                <img v-if="avatarUrl" :src="avatarUrl" class="avatar" />
-                                <img v-else :src="Avatar" class="avatar" />
+                                <img v-if="avatarUrl" :src="avatarUrl" class="avatar"  alt=""/>
+                                <img v-else :src="Avatar" class="avatar"  alt=""/>
                             </el-upload>
                         </el-form-item>
                     </el-form>
@@ -53,11 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import * as BlogApi from '@/api';
 import { eventBus } from '@/utils/eventBus';
-import Avatar from '@/assets/avatar/avatar.png'
+import Avatar from '@/assets/avatar/avatar.png';
 
 const userInfo = ref(null);
 const avatarUrl = ref('');
@@ -113,7 +113,7 @@ const submitForm = async () => {
                     avatar: formData.value.relativeAvatarUrl // 提交最新的头像路径
                 });
                 if (res?.code === 0) {
-                    fetchUserInfo()
+                    await fetchUserInfo()
                     ElMessage.success("用户信息更新成功！");
                 }
             } catch (error) {

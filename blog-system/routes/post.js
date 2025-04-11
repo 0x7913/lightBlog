@@ -1,11 +1,11 @@
 const express = require("express");
-const { Post, User, Comment, UserLikes, UserFavorites } = require("../models"); 
+const { Post, User, Comment, UserLikes, UserFavorites } = require("../models");
 const { Op, Sequelize } = require('sequelize');
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
-const authMiddleware = require("../middleware/authMiddleware");
+const { authMiddleware, optional } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -94,7 +94,7 @@ router.post('/publish', authMiddleware, async (req, res) => {
  * @queryParam {number} page - 当前页码（从1开始）
  * @queryParam {number} limit - 每次加载数量（默认10）
  */
-router.get('/list', async (req, res) => {
+router.get('/list',optional, async (req, res) => {
     try {
         let { page = 1, limit = 10 } = req.query;
         page = parseInt(page);
@@ -191,7 +191,7 @@ router.get('/list', async (req, res) => {
  * 获取文章详情页
  * @route GET /api/post/:id
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id',optional, async (req, res) => {
     const { id } = req.params;
 
     try {

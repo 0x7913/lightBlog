@@ -195,7 +195,7 @@ const loadPostDetail = async () => {
     if (res.code === 0) {
       post.value = res.data;
       commentCount.value = res.data.commentCount;
-      loadComments();
+      await loadComments();
     } else {
       console.error("加载文章失败:", res.msg);
     }
@@ -265,7 +265,7 @@ const submitReply = async (commentId, replyToUsername = null) => {
       commentCount.value = res.data.commentCount;
       replyingCommentId.value = {};  // 关闭所有输入框
       replyComment.value = "";
-      loadComments();
+      await loadComments();
     } else {
       ElMessage.error(res.msg || "回复失败");
     }
@@ -287,7 +287,7 @@ const deleteComment = async (commentId) => {
       if (res.code === 0) {
         ElMessage.success("评论删除成功");
         commentCount.value = res.data.commentCount;
-        loadComments();  // 重新加载评论
+        await loadComments();  // 重新加载评论
       } else {
         ElMessage.error(res.msg || "删除失败");
       }
