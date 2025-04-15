@@ -12,7 +12,8 @@
         </div>
         <div class="post-content">
           <h3>{{ post.title }}</h3>
-          <div>标签</div>
+<!--          TODO:标签-->
+<!--          <div>标签</div>-->
           <div class="post-active">
             <div style="display: flex; gap: 20px; align-items: center;">
               <div @click.stop="handleLike(post)" class="flex-center">
@@ -29,9 +30,7 @@
               </div>
             </div>
             <div @click.stop="handleFavorite(post)" class="flex-center">
-              {{ post.favoriteCount }}
-              <!-- <Icon icon="clarity:favorite-solid" width="16px" height="16px" style="color: #fff" stroke-width="1"
-                stroke="#000" /> -->
+<!--              {{ post.favoriteCount }}-->
               <Icon icon="fontisto:favorite" width="16px" height="16px" :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
                 stroke="#000" />
             </div>

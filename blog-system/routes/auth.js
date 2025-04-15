@@ -79,7 +79,7 @@ router.post("/register", async (req, res) => {
 
     await validCode.destroy();
 
-    res.json({ code: 0, data: { token: generateToken(newUser) }, msg: "" });
+    res.json({ code: 0, data: { token: generateToken(newUser) }, msg: "注册成功" });
   } catch (error) {
     res.json({ code: 500, data: null, msg: "服务器错误" });
   }
@@ -95,7 +95,7 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.json({ code: 400, data: null, msg: "密码错误" });
 
-    res.json({ code: 0, data: { token: generateToken(user) }, msg: "" });
+    res.json({ code: 0, data: { token: generateToken(user) }, msg: "登录成功" });
   } catch (error) {
     res.json({ code: 500, data: null, msg: "服务器错误" });
   }

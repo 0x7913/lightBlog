@@ -1,6 +1,29 @@
 <template>
   <div class="container2" ref="containerRef">
-    <div class="left"></div>
+    <div class="left" v-if="post">
+      <el-affix :offset="120">
+      <div class="post-active">
+        <div @click="handleLike(post)" class="flex-center">
+          <div><Icon icon="ic:sharp-favorite" width="24px" height="24px" :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1"
+                stroke="#000" /></div>
+          <div>{{ post.likeCount }}</div>
+        </div>
+        <div @click="scrollToCommentInput" class="flex-center">
+          <div><Icon icon="gravity-ui:comment-fill" width="23px" height="23px" style="color: #fff" stroke-width="0.7"
+                stroke="#000" /></div>
+          <div>{{ post.commentCount }}</div>
+        </div>
+        <div @click="handleFavorite(post)" class="flex-center">
+          <div><Icon icon="fontisto:favorite" width="23px" height="23px" :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
+                stroke="#000" /> </div>
+          <div>{{ post.favoriteCount }}</div>
+        </div>
+        <div @click="copyLink" class="flex-center">
+          <Icon icon="tdesign:share" width="23px" height="23px" />
+        </div>
+      </div>
+      </el-affix>
+    </div>
     <div class="center">
       <div class="main-content" v-if="post">
         <div class="post-top">
@@ -19,7 +42,7 @@
 
         <!-- 发表评论 -->
         <div class="comment-form">
-          <textarea v-model="newComment" placeholder="发表你的评论..." class="comment-input"></textarea>
+          <textarea  ref="commentInputRef" v-model="newComment" placeholder="发表你的评论..." class="comment-input"></textarea>
           <div class="comment-btn-container">
             <button @click="submitComment" :disabled="!newComment" class="submit-btn">
               发布评论
@@ -143,6 +166,7 @@ const newComment = ref("");        // 新评论内容
 const commentCount = ref();        // 评论总数
 const replyComment = ref(""); // 回复输入框
 const replyingCommentId = ref({}); // 记录当前正在回复的评论 ID
+const commentInputRef = ref(null);
 
 // 切换回复框的显示
 const toggleReply = (commentId, replyToUsername = null) => {
@@ -300,6 +324,57 @@ const deleteComment = async (commentId) => {
   });
 };
 
+// 点赞操作
+const handleLike = async (post) => {
+  try {
+    const res = await BlogApi.toggleLike(post.id);
+    if (res.code === 0) {
+      await refreshPostStatus(post);
+    }
+  } catch (err) {
+    console.error('点赞失败:', err);
+  }
+};
+//评论操作
+const scrollToCommentInput = () => {
+  if (commentInputRef.value) {
+    commentInputRef.value.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    commentInputRef.value.focus();
+  }
+};
+// 收藏操作
+const handleFavorite = async (post) => {
+  try {
+    const res = await BlogApi.toggleFavorite(post.id);
+    if (res.code === 0) {
+      await refreshPostStatus(post);
+    }
+  } catch (err) {
+    console.error('收藏失败:', err);
+  }
+};
+// 刷新文章状态
+const refreshPostStatus = async (post) => {
+  try {
+    const res = await BlogApi.getPostDetail(post.id);
+    if (res.code === 0) {
+      const updatedPost = res.data;
+      post.userLiked = updatedPost.userLiked;
+      post.userFavorited = updatedPost.userFavorited;
+      post.likeCount = updatedPost.likeCount;
+      post.favoriteCount = updatedPost.favoriteCount;
+    }
+  } catch (err) {
+    console.error("刷新文章状态失败:", err);
+  }
+};
+//复制当前链接
+const copyLink = () => {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    ElMessage.success('链接已复制到剪贴板');
+  });
+};
 onMounted(() => {
   loadPostDetail();
   document.addEventListener("click", handleClickOutside);
@@ -326,15 +401,37 @@ const formatDate = (date) => {
 
 .left {
   flex: 1;
-  border: #007bff 1px solid;
+  display: flex;
+  justify-content: center;
+  .post-active{
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    color: #666;
+    .flex-center{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      padding: 4px 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      user-select: none;
+      &:hover {
+        background-color: #eaeaea;
+        border-radius: 6px;
+      }
+    }
+  }
 }
 
 .center {
-  flex: 10;
+  flex: 6;
 }
 
 .right {
-  flex: 3;
+  flex: 2;
   border: #007bff 1px solid;
 }
 

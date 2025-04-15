@@ -29,7 +29,7 @@
                             </div>
                         </el-dropdown-item>
                         <div class="custom-divider"></div>
-                        <el-dropdown-item command="create">发布文章</el-dropdown-item>
+                        <el-dropdown-item command="create">创建文章</el-dropdown-item>
                         <el-dropdown-item command="settings">设置</el-dropdown-item>
                         <div class="custom-divider"></div>
                         <el-dropdown-item command="logout">退出登录</el-dropdown-item>
@@ -182,33 +182,43 @@ const sendVerificationCode = async () => {
 
 // 处理登录，先验证表单数据
 const handleLogin = () => {
-    loginFormRef.value.validate(async (valid) => {
-        if (!valid) return;
-        try {
-            const res = await BlogApi.login(loginForm.value);
-            localStorage.setItem("token", res.data.token);
-            ElMessage.success("登录成功");
-            await fetchUserInfo();
-            eventBus.emit('refresh-posts');
-            showLogin.value = false;
-        } catch (error) {
-            ElMessage.error("登录失败，请检查邮箱和密码");
-        }
-    });
+  loginFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+    try {
+      const res = await BlogApi.login(loginForm.value);
+      if (res.code !== 0) {
+        ElMessage.error(res.msg || "登录失败");
+        return;
+      }
+      localStorage.setItem("token", res.data.token);
+      ElMessage.success("登录成功");
+      await fetchUserInfo();
+      eventBus.emit('refresh-posts');
+      showLogin.value = false;
+    } catch (error) {
+      const msg = error.response?.data?.msg || "登录失败，请检查网络";
+      ElMessage.error(msg);
+    }
+  });
 };
 // 处理注册，先验证表单数据
 const handleRegister = () => {
-    registerFormRef.value.validate(async (valid) => {
-        if (!valid) return;
-        try {
-            await BlogApi.register(registerForm.value);
-            ElMessage.success("注册成功，请登录");
-            showRegister.value = false;
-            showLogin.value = true;
-        } catch (error) {
-            ElMessage.error("注册失败");
-        }
-    });
+  registerFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+    try {
+      const res = await BlogApi.register(registerForm.value);
+      if (res.code !== 0) {
+        ElMessage.error(res.msg || "注册失败");
+        return;
+      }
+      ElMessage.success("注册成功，请登录");
+      showRegister.value = false;
+      showLogin.value = true;
+    } catch (error) {
+      const msg = error.response?.data?.msg || "注册失败，请检查网络";
+      ElMessage.error(msg);
+    }
+  });
 };
 const fetchUserInfo = async () => {
     try {
