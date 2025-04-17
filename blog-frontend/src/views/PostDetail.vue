@@ -57,7 +57,7 @@
               <img :src="comment.avatar ? 'http://localhost:5000' + comment.avatar : Avatar" alt="用户头像"
                 class="comment-avatar" />
               <div class="comment-info">
-                <div style="border: 1px solid #f0f0f0; border-radius: 4px;padding: 10px;">
+                <div style="border: 1px solid #f0f0f0; border-radius: 8px;padding: 10px;">
                   <div class="comment-detail">
                     <div>
                       <div class="comment-author">{{ comment.username }}</div>
@@ -97,7 +97,7 @@
                       <img :src="reply.avatar ? 'http://localhost:5000' + reply.avatar : Avatar" alt="用户头像"
                         class="comment-avatar" />
                       <div class="comment-info">
-                        <div style="border: 1px solid #f0f0f0; border-radius: 4px;padding: 10px;">
+                        <div style="border: 1px solid #f0f0f0; border-radius: 8px;padding: 10px;">
                           <div class="comment-detail">
                             <div class="comment-author">
                               {{ reply.username }}
@@ -151,7 +151,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import * as BlogApi from "@/api";
 import { marked } from "marked";
@@ -337,10 +337,20 @@ const handleLike = async (post) => {
 };
 //评论操作
 const scrollToCommentInput = () => {
-  if (commentInputRef.value) {
-    commentInputRef.value.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    commentInputRef.value.focus();
-  }
+  nextTick(() => {
+    const el = commentInputRef.value;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const scrollTop = window.scrollY + rect.top - window.innerHeight / 2;
+      window.scrollTo({
+        top: scrollTop,
+        behavior: 'smooth',
+      });
+      setTimeout(() => {
+        el.focus();
+      }, 500);
+    }
+  });
 };
 // 收藏操作
 const handleFavorite = async (post) => {
@@ -413,7 +423,7 @@ const formatDate = (date) => {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      border-radius: 4px;
+      border-radius: 8px;
       padding: 4px 6px;
       cursor: pointer;
       transition: background-color 0.2s;
@@ -437,7 +447,7 @@ const formatDate = (date) => {
 
 .main-content {
   padding: 32px 64px;
-  border-radius: 4px;
+  border-radius: 8px;
   background-color: #ffffff;
   margin-bottom: 10px;
 
@@ -508,7 +518,7 @@ const formatDate = (date) => {
       color: #abb2bf;
       padding: 15px;
       overflow-x: auto;
-      border-radius: 4px;
+      border-radius: 8px;
 
       code {
         background: transparent !important;
@@ -563,7 +573,7 @@ const formatDate = (date) => {
 
 .main-comment {
   padding: 32px 64px;
-  border-radius: 4px;
+  border-radius: 8px;
   background-color: #ffffff;
 }
 
@@ -577,7 +587,7 @@ const formatDate = (date) => {
     height: 100px;
     padding: 10px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 8px;
     resize: none;
     outline: none;
     font-size: 16px;
@@ -598,7 +608,7 @@ const formatDate = (date) => {
       color: #fff;
       background-color: #007bff;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
       transition: 0.3s;
 
@@ -680,7 +690,7 @@ const formatDate = (date) => {
               border: 1px solid #ccc;
               box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
               z-index: 10;
-              border-radius: 4px;
+              border-radius: 8px;
               min-width: 100px;
               padding: 5px 0;
             }

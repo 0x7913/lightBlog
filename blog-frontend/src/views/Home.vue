@@ -259,7 +259,7 @@ const formatDate = (date) => {
 
 .post-card {
   padding: 20px;
-  border-radius: 4px;
+  border-radius: 8px;
   background-color: #ffffff;
   margin-bottom: 10px;
   cursor: pointer;
@@ -308,7 +308,7 @@ const formatDate = (date) => {
         gap: 5px;
         align-items: center;
         padding: 4px 6px;
-        border-radius: 4px;
+        border-radius: 8px;
         cursor: pointer;
         transition: background-color 0.2s;
         user-select: none; // 禁止文本选中
@@ -326,7 +326,7 @@ const formatDate = (date) => {
   padding: 10px;
   border: 1px solid #007bff;
   color: #007bff;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .load-more:hover {

@@ -55,6 +55,14 @@ export const getPostList = async (page = 1, limit = 10) => {
 export const getPostDetail = async (postId) => {
   return await request.get(`/post/${postId}`);
 };
+// 获取当前登录用户的文章
+export const getMyPostList = async (page = 1, limit = 20) => {
+  return await request.get(`/post/myPostList?page=${page}&limit=${limit}`);
+};
+// 获取指定用户发布的文章
+export const getUserPostList = async (userId, page = 1, limit = 20) => {
+  return await request.get(`/post/user/${userId}?page=${page}&limit=${limit}`);
+};
 
 // 评论相关接口
 // 发表评论

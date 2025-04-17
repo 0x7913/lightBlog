@@ -16,5 +16,5 @@ sequelize.authenticate()
     .catch((err) => {
         console.log('数据库连接失败', err);
     });
-    
+
 module.exports = { sequelize, DataTypes, Op };

@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
     img {
         max-width: 100%;
         height: auto;
-        border-radius: 4px;
+        border-radius: 8px;
         object-fit: cover;
     }
 
@@ -179,7 +179,7 @@ onBeforeUnmount(() => {
         background: #282c34;
         color: #abb2bf;
         padding: 10px;
-        border-radius: 4px;
+        border-radius: 8px;
         display: block;
         overflow-x: auto;
     }

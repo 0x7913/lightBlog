@@ -163,7 +163,11 @@ const sendVerificationCode = async () => {
     registerFormRef.value.validateField('email', async (errorMessage) => {
         if (!errorMessage) return
         try {
-            await BlogApi.sendCode(registerForm.value.email);
+            const res =await BlogApi.sendCode(registerForm.value.email);
+            if (res.code !== 0) {
+              ElMessage.error(res.msg || "发送失败");
+              return;
+            }
             ElMessage.success("验证码已发送，请查收邮箱");
             // 启动倒计时
             codeTimer.value = 60;
@@ -175,7 +179,8 @@ const sendVerificationCode = async () => {
                 }
             }, 1000);
         } catch (error) {
-            ElMessage.error("验证码发送失败");
+          const msg = error.response?.data?.msg || "验证码发送失败"
+          ElMessage.error(msg);
         }
     });
 };
@@ -302,7 +307,7 @@ onUnmounted(() => {
 
         .logo {
             background: #000;
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 4px;
             font-size: 24px;
             font-weight: bold;
@@ -365,7 +370,7 @@ onUnmounted(() => {
 }
 
 :deep(.el-dropdown-menu__item) {
-    border-radius: 4px;
+    border-radius: 8px;
     margin: 0 10px;
 }
 

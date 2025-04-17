@@ -57,7 +57,77 @@ router.post("/upload-image",authMiddleware, upload.single("image"), (req, res) =
         res.json({ code: 500, data: null, msg: "服务器错误" });
     }
 });
+/**
+ * 获取当前登录用户的文章列表
+ * @route GET /api/post/myPostList?page=1
+ */
+router.get('/myPostList', authMiddleware, async (req, res) => {
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
 
+    try {
+        const result = await Post.findAll({
+            where: { userId },
+            attributes: ['id', 'title', 'content', 'createdAt', 'updatedAt'], // 只返回这些字段
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
+        });
+
+        res.json({
+            code: 0,
+            msg: result.length === 0 ? '您尚未发布任何文章' : '文章列表加载成功',
+            data: {
+                posts: result,
+                hasMore: result.length === limit,
+            },
+        });
+    } catch (err) {
+        console.error('获取我的文章失败:', err);
+        res.status(500).json({
+            code: 500,
+            msg: '获取我的文章失败',
+        });
+    }
+});
+
+/**
+ * 获取指定用户的文章列表
+ * @route GET /api/post/user/:userId?page=1
+ */
+router.get('/user/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    try {
+        const result = await Post.findAll({
+            where: { userId },
+            attributes: ['id', 'title', 'content', 'createdAt', 'updatedAt'], // 不包含 User 信息
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
+        });
+
+        res.json({
+            code: 0,
+            msg: result.length === 0 ? '该用户尚未发布任何文章' : '文章列表加载成功',
+            data: {
+                posts: result,
+                hasMore: result.length === limit,
+            },
+        });
+    } catch (err) {
+        console.error('获取用户文章失败:', err);
+        res.status(500).json({
+            code: 500,
+            msg: '获取用户文章失败',
+        });
+    }
+});
 // 发布文章接口
 router.post('/publish', authMiddleware, async (req, res) => {
     try {
