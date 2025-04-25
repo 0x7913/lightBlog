@@ -1,74 +1,126 @@
 <template>
   <div class="container4">
     <div class="profile-card" v-if="userInfo">
-      <img :src="userInfo.avatar ? 'http://localhost:5000' + userInfo.avatar : Avatar" alt="用户头像" class="profile-avatar" />
-        <Icon icon="basil:edit-outline" @click="toEdit" class="edit-icon"/>
-      <div class="user-info">
-        <div class="profile-name">
-          <div>{{ userInfo.username }}</div>
-        </div>
-        <div class="profile-subinfo">
-          <div class="flex-center">
-            <Icon icon="mynaui:location" width="16px" height="16px"  style="color: #999" />
-            <span class="location">{{ userInfo.location || "未填写地址" }}</span>
+      <img :src="userInfo.avatar ? 'http://localhost:5000' + userInfo.avatar : Avatar" alt="用户头像"
+           class="profile-avatar"/>
+      <div class="profile-container">
+        <div class="user-info">
+          <div class="profile-name">
+            <div>{{ userInfo.username }}</div>
           </div>
-          <div class="flex-center">
-            <Icon icon="iconoir:birthday-cake" width="16px" height="16px"  style="color: #999" />
-            <span>{{ userInfo.birthday || "未设置生日" }}</span>
+          <div class="profile-subinfo">
+            <div class="flex-center">
+              <Icon icon="mynaui:location" width="16px" height="16px" style="color: #999"/>
+              <span class="location">{{ userInfo.location || "未填写地址" }}</span>
+            </div>
+            <div class="flex-center">
+              <Icon icon="iconoir:birthday-cake" width="16px" height="16px" style="color: #999"/>
+              <span>{{ userInfo.birthday || "未设置生日" }}</span>
+            </div>
+          </div>
+          <div class="profile-bio">
+            {{ userInfo.bio ? userInfo.bio : "暂无个人介绍" }}
           </div>
         </div>
-        <div class="profile-bio">
-          {{ userInfo.bio ? userInfo.bio : "暂无个人介绍" }}
+        <div class="profile-edit">
+          <Icon icon="basil:edit-outline" v-if="!route.params.id" @click="toEdit" class="edit-icon"/>
         </div>
       </div>
     </div>
     <div class="profile-info">
-      <el-menu
-          v-model="activeMenu"
-          class="setting-menu"
-          mode="vertical"
-          @select="handleSelect"
-          default-active="posts"
-      >
-        <el-menu-item index="posts">已发布文章</el-menu-item>
-        <el-menu-item index="likes">我的点赞</el-menu-item>
-        <el-menu-item index="favorites">我的收藏</el-menu-item>
-        <el-menu-item index="comments">互动记录</el-menu-item>
-      </el-menu>
-    </div>
-    <!-- 根据 activeMenu 进行条件渲染 -->
+      <div class="menu-wrapper">
+        <el-menu
+            v-model="activeMenu"
+            class="setting-menu"
+            mode="vertical"
+            @select="handleSelect"
+            default-active="posts"
+        >
+          <el-menu-item index="posts">已发布文章</el-menu-item>
+          <el-menu-item index="likes">点赞记录</el-menu-item>
+          <el-menu-item index="favorites">收藏记录</el-menu-item>
+          <el-menu-item index="comments">互动记录</el-menu-item>
+        </el-menu>
+      </div>
 
+      <div class="postsList">
+        <!-- 根据 activeMenu 进行条件渲染 -->
+        <template v-if="['posts', 'likes', 'favorites'].includes(activeMenu)">
+          <template v-if="postList.length">
+            <div v-for="(post, index) in postList" :key="post.id" class="post-card-wrapper">
+              <div class="post-card">
+                <div class="post-title">{{ post.title }}</div>
+                <div class="post-time">{{ formatDate(post.createdAt) }}</div>
+                <!-- 你可以加更多展示内容 -->
+              </div>
+              <!-- 分割线：不是最后一项才显示 -->
+              <el-divider/>
+            </div>
+          </template>
+          <template v-else>
+            <div class="empty-tip">暂无文章</div>
+          </template>
+        </template>
+        <template v-if="activeMenu === 'comments'">
+          <template v-if="commentList.length">
+            <div v-for="comment in commentList" :key="comment.id" class="post-card-wrapper">
+              <div class="post-card">
+                <div class="comment-content">{{ comment.content }}</div>
+                <div class="post-time">{{ formatDate(comment.createdAt) }}</div>
+              </div>
+              <el-divider/>
+            </div>
+          </template>
+          <template v-else>
+            <div class="empty-tip">暂无评论记录</div>
+          </template>
+        </template>
+
+        <div v-if="loading" class="loading">加载中...</div>
+        <div v-else-if="!hasMore && (postList.length || commentList.length)" class="no-more">没有更多了</div>
+        <div ref="observerTarget" class="observer-target"></div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
+import {ref, onMounted, onUnmounted, nextTick, watch} from "vue";
+import {useRouter, useRoute} from "vue-router";
 import * as BlogApi from '@/api';
 import Avatar from '@/assets/avatar/avatar.png'
-import { ElMessage } from "element-plus";
+import {ElMessage} from "element-plus";
 
 const userInfo = ref(null)
 const router = useRouter()
-const activeMenu = ref('overview');
+const route = useRoute();
+const activeMenu = ref('posts');
 const postList = ref([]);
+const commentList = ref([]);
 const page = ref(1);
 const hasMore = ref(true);
+const loading = ref(false);
+const DELAY = 300;
+const observerTarget = ref(null); // 目标触发点
+let observer = null;
+let timeoutId = null;  // 延迟加载的计时器
 
 const fetchUserInfo = async () => {
   try {
-    const res = await BlogApi.getUserInfo();
-    userInfo.value = res.data
+    const userId = route.params.id;
+    const res = userId
+        ? await BlogApi.getUserInfoById(userId)
+        : await BlogApi.getUserInfo();
+    userInfo.value = res.data;
   } catch (error) {
     console.error("获取用户信息失败", error);
   }
 };
-
 const toEdit = () => {
   router.push('/setting')
 }
 
-const handleSelect = (key:string) => {
+const handleSelect = (key: string) => {
   activeMenu.value = key
   postList.value = []
   page.value = 1
@@ -78,30 +130,40 @@ const handleSelect = (key:string) => {
 
 // 通用加载方法，根据 activeMenu 请求不同接口
 const loadData = async () => {
-  if (!hasMore.value) return;
-
-  let res;
+  if (!hasMore.value || loading.value) return;
+  loading.value = true;
   try {
+    const userId = route.params.id;
+    let res;
     switch (activeMenu.value) {
       case "posts":
-        res = await BlogApi.getMyPostList(page.value);
+        res = userId
+            ? await BlogApi.getUserPostList(userId, page.value)
+            : await BlogApi.getMyPostList(page.value);
+        postList.value.push(...res.data.posts);
         break;
-      // case "likes":
-      //   res = await BlogApi.getLikedPosts(page.value);
-      //   break;
-      // case "favorites":
-      //   res = await BlogApi.getFavoritedPosts(page.value);
-      //   break;
-      // case "comments":
-      //   res = await BlogApi.getMyComments(page.value);
-      //   break;
+      case "likes":
+        res = userId
+            ? await BlogApi.getUserLikedPostList(userId, page.value)
+            : await BlogApi.getMyLikedPostList(page.value);
+        postList.value.push(...res.data.posts);
+        break;
+      case "favorites":
+        res = userId
+            ? await BlogApi.getUserFavoritedPostList(userId, page.value)
+            : await BlogApi.getMyFavoritedPostList(page.value);
+        postList.value.push(...res.data.posts);
+        break;
+      case "comments":
+        res = userId
+            ? await BlogApi.getUserCommentList(userId, page.value)
+            : await BlogApi.getMyCommentList(page.value);
+        commentList.value.push(...res.data.comments);
+        break;
       default:
         return;
     }
-
     if (res.code === 0) {
-      postList.value.push(...res.data.posts);
-      console.log("post",postList.value)
       hasMore.value = res.data.hasMore;
       page.value++;
     } else {
@@ -109,12 +171,59 @@ const loadData = async () => {
     }
   } catch (err) {
     console.error("加载失败", err);
+  } finally {
+    loading.value = false; // 加载完成
+    await nextTick(() => {
+        initObserver();
+    });
   }
 };
 
-onMounted(()=>{
+const initObserver = () => {
+  if (observer) observer.disconnect();
+  if (!observerTarget.value) return;
+  observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore.value && !loading.value) {
+          if (timeoutId) clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            loadData();
+          }, DELAY);
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1,
+      }
+  );
+  observer.observe(observerTarget.value);
+};
+
+const formatDate = (date) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');  // 月份补0
+  const day = String(d.getDate()).padStart(2, '0');         // 日期补0
+  return `${year}-${month}-${day}`;
+};
+
+onMounted(() => {
   fetchUserInfo()
+  loadData()
 })
+onUnmounted(() => {
+  if (observer) observer.disconnect();
+  if (timeoutId) clearTimeout(timeoutId);
+});
+watch(() => route.params.id, () => {
+  postList.value = [];
+  page.value = 1;
+  hasMore.value = true;
+  fetchUserInfo();
+  loadData();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -122,36 +231,56 @@ onMounted(()=>{
   margin: 0 20%;
   padding-top: 60px;
 }
+
 .profile-card {
-  position: relative;
   display: flex;
   align-items: center;
   padding: 20px;
-  gap: 30px;
-  .edit-icon {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    width: 23px;
-    height: 23px;
-    color: #999;
+  gap: 40px;
+  margin-bottom: 20px;
+
+  .profile-edit{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    transition: background 0.2s;
     cursor: pointer;
+    .edit-icon {
+      width: 23px;
+      height: 23px;
+      color: #999;
+    }
+    &:hover {
+      background: #eaeaea;
+    }
   }
-  .user-info{
+  .profile-container{
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .user-info {
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
+
   .profile-avatar {
     width: 120px;
     height: 120px;
     border-radius: 50%;
     object-fit: cover;
   }
+
   .profile-name {
     font-size: 20px;
     color: #666;
   }
+
   .profile-subinfo {
     display: flex;
     align-items: center;
@@ -159,13 +288,15 @@ onMounted(()=>{
     font-size: 13px;
     color: #999;
     margin-top: 4px;
-    .flex-center{
+
+    .flex-center {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
     }
   }
+
   .profile-bio {
     color: #666;
     font-size: 14px;
@@ -173,7 +304,11 @@ onMounted(()=>{
     white-space: pre-wrap;
   }
 }
-.profile-info{
+
+.profile-info {
+  display: flex;
+  gap: 30px;
+
   .setting-menu {
     display: flex;
     flex-direction: column;
@@ -182,25 +317,99 @@ onMounted(()=>{
     width: 150px;
     height: 600px;
     border-radius: 8px;
+
     .overview {
       height: 56px;
     }
   }
-  :deep(.el-menu){
+
+  .postsList {
+    flex: 6;
+    background-color: #fff;
+    padding: 0 20px 20px 20px;
+    border-radius: 8px;
+    height: 100%;
+
+    .post-card-wrapper {
+      .post-card {
+        border-radius: 6px;
+        transition: box-shadow 0.3s;
+        padding: 16px 0;
+        cursor: pointer;
+
+        .post-title {
+          color: #333;
+          font-weight: 600;
+        }
+        .comment-content{
+          font-size: 14px;
+          line-height: 1.6;
+          white-space: normal;
+          word-break: break-word;
+          white-space: pre-wrap;
+          color: #333;
+        }
+
+        .post-time {
+          font-size: 12px;
+          margin-top: 10px;
+          color: #666;
+        }
+      }
+
+      &:hover .post-title  {
+        color: #409EFF;
+      }
+      &:hover .comment-content  {
+        color: #409EFF;
+      }
+
+      :deep(.el-divider--horizontal) {
+        margin: 0;
+      }
+    }
+
+    .empty-tip {
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+      margin-top: 40px;
+    }
+
+    .loading,
+    .no-more {
+      text-align: center;
+      font-size: 14px;
+      color: #999;
+      margin-top: 20px;
+    }
+  }
+
+  :deep(.el-menu) {
     background-color: #f6f6f6;
     border-right: none;
+
     .el-menu-item {
       margin-bottom: 5px;
       transition: background-color 0.3s;
+
       &:hover {
         border-radius: 8px;
         color: #409eff;
       }
+
       &.is-active {
         border-radius: 8px;
         background-color: #ffffff;
       }
     }
+  }
+
+  .menu-wrapper {
+    position: sticky;
+    top: 80px;
+    align-self: flex-start;
+    height: fit-content;
   }
 }
 

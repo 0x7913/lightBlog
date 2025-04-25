@@ -1,11 +1,12 @@
 <template>
     <div class="top-header">
+        <div style="flex:1"></div>
         <div class="header-container">
             <div class="logo" @click="toHome()">
                 EchoLog
             </div>
         </div>
-        <div style="flex:3;"></div>
+        <div class="header-center"></div>
         <div class="sign" v-if="!userInfo?.id && !userInfo?.username && !userInfo?.email">
             <el-button size="large" text @click="openLogin()">登 录</el-button>
             <el-button size="large" @click="openRegister()">创 建 账 号</el-button>
@@ -37,6 +38,7 @@
                 </template>
             </el-dropdown>
         </div>
+        <div style="flex:1"></div>
     </div>
 
     <!-- 登录弹窗 -->
@@ -303,7 +305,7 @@ onUnmounted(() => {
         flex: 1;
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: flex-start;
 
         .logo {
             background: #000;
@@ -315,19 +317,21 @@ onUnmounted(() => {
             cursor: pointer;
         }
     }
-
+    .header-center{
+      flex: 6.1;
+    }
     .sign {
-        flex: 1;
+        flex: 0.9;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
     }
 
     .signed {
-        flex: 1;
+        flex: 0.9;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
         gap: 16px;
 
         .user-avatar {

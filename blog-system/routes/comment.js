@@ -1,7 +1,71 @@
 const express = require("express");
-const { Comment, User, Post } = require("../models");
+const { Comment, User, Post, CommentLike } = require("../models");
 const { authMiddleware, optional } = require("../middleware/authMiddleware");
 const router = express.Router();
+
+// 获取当前登录用户的评论列表
+router.get('/myComments', authMiddleware, async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    try {
+        const comments = await Comment.findAll({
+            where: { userId: req.user.id },
+            include: [{ model: Post, attributes: ['id', 'title'] }],
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
+        });
+
+        res.json({
+            code: 0,
+            msg: comments.length ? '评论加载成功' : '您尚未发表任何评论',
+            data: {
+                comments,
+                hasMore: comments.length === limit
+            }
+        });
+    } catch (err) {
+        console.error('获取我的评论失败:', err);
+        res.status(500).json({ code: 500, msg: '获取我的评论失败' });
+    }
+});
+
+// 获取指定用户的评论列表
+router.get('/userComments/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ code: 404, msg: '用户不存在' });
+        }
+
+        const comments = await Comment.findAll({
+            where: { userId },
+            include: [{ model: Post, attributes: ['id', 'title'] }],
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
+        });
+
+        res.json({
+            code: 0,
+            msg: comments.length ? '评论加载成功' : '该用户暂无评论',
+            data: {
+                comments,
+                hasMore: comments.length === limit
+            }
+        });
+    } catch (err) {
+        console.error('获取用户评论失败:', err);
+        res.status(500).json({ code: 500, msg: '获取用户评论失败' });
+    }
+});
 
 /**
  * 发布评论
@@ -62,59 +126,107 @@ router.post("/:postId", authMiddleware, async (req, res) => {
  * @route GET /api/comment/:postId
  * @desc 不需要登录
  */
-router.get("/:postId", async (req, res) => {
+router.get("/:postId", optional, async (req, res) => {
     const { postId } = req.params;
+    const userId = req.user?.id;
+    let likedCommentIds = [];
 
     try {
-        // 查询评论及其回复
-        const comments = await Comment.findAll({
-            where: { postId, parentId: null }, // 只查顶级评论
-            attributes: ["id", "content", "createdAt", "replyToUsername"],
-            include: [
-                {
-                    model: User,
-                    attributes: ["id", "username", "avatar"]
-                },
-                {
-                    model: Comment,
-                    as: "replies",
-                    attributes: ["id", "content", "createdAt", "userId", "parentId", "replyToUsername"],
-                    include: {
-                        model: User,
-                        attributes: ["id", "username", "avatar"]
-                    }
-                }
-            ],
-            order: [["createdAt", "DESC"]]
+        // 获取用户点赞的评论 ID
+        if (userId) {
+            const likes = await CommentLike.findAll({
+                where: { userId },
+                attributes: ['commentId']
+            });
+            likedCommentIds = likes.map(like => like.commentId);
+        }
+
+        // 查顶级评论
+        const topLevelComments = await Comment.findAll({
+            where: { postId, parentId: null },
+            include: [{
+                model: User,
+                attributes: ['id', 'username', 'avatar']
+            }]
         });
 
-        const formattedComments = comments.map(comment => ({
-            id: comment.id,
-            content: comment.content,
-            createdAt: comment.createdAt,
-            userId: comment.User.id,
-            username: comment.User.username,
-            avatar: comment.User.avatar,
-            replies: comment.replies.map(reply => ({
-                id: reply.id,
-                content: reply.content,
-                createdAt: reply.createdAt,
-                userId: reply.User.id,
-                username: reply.User.username,
-                avatar: reply.User.avatar,
-                replyToUsername: reply.replyToUsername
-            }))
+        // 查每条顶级评论的点赞数、回复、以及回复点赞数
+        const formattedComments = await Promise.all(topLevelComments.map(async (comment) => {
+            const likeCount = await CommentLike.count({ where: { commentId: comment.id } });
+
+            // 查子评论
+            const replies = await Comment.findAll({
+                where: { parentId: comment.id },
+                include: [{ model: User, attributes: ['id', 'username', 'avatar'] }]
+            });
+
+            const formattedReplies = await Promise.all(replies.map(async (reply) => {
+                const replyLikeCount = await CommentLike.count({ where: { commentId: reply.id } });
+                return {
+                    id: reply.id,
+                    content: reply.content,
+                    createdAt: reply.createdAt,
+                    userId: reply.User.id,
+                    username: reply.User.username,
+                    avatar: reply.User.avatar,
+                    replyToUsername: reply.replyToUsername,
+                    likeCount: replyLikeCount,
+                    liked: likedCommentIds.includes(reply.id)
+                };
+            }));
+            formattedReplies.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+            return {
+                id: comment.id,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                userId: comment.User.id,
+                username: comment.User.username,
+                avatar: comment.User.avatar,
+                likeCount,
+                liked: likedCommentIds.includes(comment.id),
+                replies: formattedReplies
+            };
         }));
+        formattedComments.sort((a, b) => b.likeCount - a.likeCount);
 
         res.status(200).json({
             code: 0,
             msg: "评论加载成功",
             data: formattedComments
         });
-
     } catch (error) {
         console.error("加载评论失败:", error);
         res.status(500).json({ code: 500, msg: "服务器错误" });
+    }
+});
+
+/**
+ * 点赞或取消点赞评论
+ * @route POST /api/comment/like/:commentId
+ * @desc 登录后调用
+ */
+router.post('/like/:commentId', authMiddleware, async (req, res) => {
+    const { commentId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const existing = await CommentLike.findOne({
+            where: { userId, commentId }
+        });
+
+        if (existing) {
+            // 已点赞 → 取消点赞
+            await existing.destroy();
+            return res.json({ code: 0, msg: '取消点赞成功', data: { liked: false } });
+        } else {
+            // 未点赞 → 点赞
+            await CommentLike.create({ userId, commentId });
+            return res.json({ code: 0, msg: '点赞成功', data: { liked: true } });
+        }
+    } catch (err) {
+        console.error('切换评论点赞失败:', err);
+        res.status(500).json({ code: 500, msg: '操作失败' });
     }
 });
 

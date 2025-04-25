@@ -21,6 +21,11 @@ export const getUserInfo = async () => {
   return await request.get('/auth/me');
 };
 
+// 获取指定用户信息（公开）
+export const getUserInfoById = (userId) => {
+  return request.get(`/auth/user/${userId}`);
+};
+
 // 上传头像（返回头像 URL）
 export const uploadAvatar = async (formData) => {
   return await request.post("/auth/upload-avatar", formData, {
@@ -47,7 +52,7 @@ export const createPost = async (data) => {
 };
 
 // 获取文章列表
-export const getPostList = async (page = 1, limit = 10) => {
+export const getPostList = async (page = 1, limit = 20) => {
   return await request.get(`/post/list?page=${page}&limit=${limit}`);
 };
 
@@ -55,13 +60,35 @@ export const getPostList = async (page = 1, limit = 10) => {
 export const getPostDetail = async (postId) => {
   return await request.get(`/post/${postId}`);
 };
+
 // 获取当前登录用户的文章
 export const getMyPostList = async (page = 1, limit = 20) => {
   return await request.get(`/post/myPostList?page=${page}&limit=${limit}`);
 };
+
 // 获取指定用户发布的文章
 export const getUserPostList = async (userId, page = 1, limit = 20) => {
-  return await request.get(`/post/user/${userId}?page=${page}&limit=${limit}`);
+  return await request.get(`/post/userPostList/${userId}?page=${page}&limit=${limit}`);
+};
+
+// 获取当前登录用户点赞的文章
+export const getMyLikedPostList = async (page = 1, limit = 20) => {
+  return await request.get(`/post/myLikedPosts?page=${page}&limit=${limit}`);
+};
+
+// 获取指定用户点赞的文章
+export const getUserLikedPostList = async (userId, page = 1, limit = 20) => {
+  return await request.get(`/post/userLikedPosts/${userId}?page=${page}&limit=${limit}`);
+};
+
+// 获取当前登录用户收藏的文章
+export const getMyFavoritedPostList = async (page = 1, limit = 20) => {
+  return await request.get(`/post/myFavoritedPosts?page=${page}&limit=${limit}`);
+};
+
+// 获取指定用户收藏的文章
+export const getUserFavoritedPostList = async (userId, page = 1, limit = 20) => {
+  return await request.get(`/post/userFavoritedPosts/${userId}?page=${page}&limit=${limit}`);
 };
 
 // 评论相关接口
@@ -73,6 +100,21 @@ export const createComment = async (postId, content, parentId = null, replyToUse
 // 获取文章评论列表
 export const getCommentList = async (postId) => {
   return await request.get(`/comment/${postId}`);
+};
+
+// 获取当前登录用户的评论
+export const getMyCommentList = async (page = 1, limit = 20) => {
+  return await request.get(`/comment/myComments?page=${page}&limit=${limit}`);
+};
+
+// 获取指定用户的评论
+export const getUserCommentList = async (userId, page = 1, limit = 20) => {
+  return await request.get(`/comment/userComments/${userId}?page=${page}&limit=${limit}`);
+};
+
+// 点赞或取消点赞评论
+export const toggleCommentLike = async (commentId) => {
+  return await request.post(`/comment/like/${commentId}`);
 };
 
 // 删除评论

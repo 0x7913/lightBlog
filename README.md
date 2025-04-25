@@ -56,14 +56,14 @@ POST /api/auth/login —— 用户登录
 GET /api/auth/me —— 获取当前用户信息（需要登录）
 
 
-#运行命令
-cd blog-system
-npm install
-node server.js
-#新建终端
-cd blog-frontend
-npm install
-npm run dev
+#运行命令  
+cd blog-system  
+npm install  
+node server.js  
+#新建终端  
+cd blog-frontend  
+npm install  
+npm run dev  
 
 #方案
 直接进入主页面，不管是否登录都可以浏览文章。
@@ -80,3 +80,8 @@ npm run dev
 右边就显示对应目录的内容，点击可以进入到详情页，
 个人资料中可以添加个人简介，默认显示暂无简介
 需要修改可以点击编辑跳转到设置中修改
+
+3主页中的积极讨论
+2标签功能
+4个人页面的列表布局是否需要更改
+1评论的点赞功能

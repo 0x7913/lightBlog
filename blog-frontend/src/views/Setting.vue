@@ -1,11 +1,9 @@
 <template>
     <div class="container5">
-      <el-affix :offset="68.1">
         <el-menu v-model="activeMenu" class="setting-menu" mode="vertical" @select="handleSelect" default-active="overview">
             <el-menu-item class="overview" index="overview">修改个人资料</el-menu-item>
             <el-menu-item class="account" index="account">账号安全</el-menu-item>
         </el-menu>
-      </el-affix>
         <!-- 根据 activeMenu 进行条件渲染 -->
         <div class="content">
             <template v-if="activeMenu === 'overview'">

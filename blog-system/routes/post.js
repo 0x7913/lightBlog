@@ -97,7 +97,7 @@ router.get('/myPostList', authMiddleware, async (req, res) => {
  * 获取指定用户的文章列表
  * @route GET /api/post/user/:userId?page=1
  */
-router.get('/user/:userId', async (req, res) => {
+router.get('/userPostList/:userId', async (req, res) => {
     const { userId } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
@@ -128,6 +128,167 @@ router.get('/user/:userId', async (req, res) => {
         });
     }
 });
+
+/**
+ * 获取当前登录用户点赞的文章列表
+ * @route GET /api/post/myLikedPosts?page=1
+ */
+router.get('/myLikedPosts', authMiddleware, async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    try {
+        const user = await User.findByPk(req.user.id);
+        const likedPosts = await user.getLikedPosts({
+            attributes: ['id', 'title', 'content', 'createdAt', 'updatedAt'],
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
+            joinTableAttributes: [], // 不返回中间表字段
+        });
+
+        res.json({
+            code: 0,
+            msg: likedPosts.length ? '点赞文章加载成功' : '您还未点赞任何文章',
+            data: {
+                posts: likedPosts,
+                hasMore: likedPosts.length === limit,
+            }
+        });
+    } catch (err) {
+        console.error('获取点赞文章失败:', err);
+        res.status(500).json({
+            code: 500,
+            msg: '获取点赞文章失败',
+        });
+    }
+});
+
+/**
+ * 获取指定用户点赞的文章列表
+ * @route GET /api/post/userLikedPosts/:userId?page=1
+ */
+router.get('/userLikedPosts/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({
+                code: 404,
+                msg: '用户不存在',
+            });
+        }
+
+        const likedPosts = await user.getLikedPosts({
+            attributes: ['id', 'title', 'content', 'createdAt', 'updatedAt'],
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
+            joinTableAttributes: [],
+        });
+
+        res.json({
+            code: 0,
+            msg: likedPosts.length ? '点赞文章加载成功' : '该用户未点赞任何文章',
+            data: {
+                posts: likedPosts,
+                hasMore: likedPosts.length === limit,
+            }
+        });
+    } catch (err) {
+        console.error('获取指定用户点赞文章失败:', err);
+        res.status(500).json({
+            code: 500,
+            msg: '获取指定用户点赞文章失败',
+        });
+    }
+});
+
+/**
+ * 获取当前登录用户收藏的文章列表
+ * @route GET /api/post/myFavoritedPosts?page=1
+ */
+router.get('/myFavoritedPosts', authMiddleware, async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    try {
+        const user = await User.findByPk(req.user.id);
+        const favoritedPosts = await user.getFavoritedPosts({
+            attributes: ['id', 'title', 'content', 'createdAt', 'updatedAt'],
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
+            joinTableAttributes: [], // 不返回中间表字段
+        });
+
+        res.json({
+            code: 0,
+            msg: favoritedPosts.length ? '收藏文章加载成功' : '您还未收藏任何文章',
+            data: {
+                posts: favoritedPosts,
+                hasMore: favoritedPosts.length === limit,
+            }
+        });
+    } catch (err) {
+        console.error('获取收藏文章失败:', err);
+        res.status(500).json({
+            code: 500,
+            msg: '获取收藏文章失败',
+        });
+    }
+});
+
+/**
+ * 获取指定用户收藏的文章列表
+ * @route GET /api/post/userFavoritedPosts/:userId?page=1
+ */
+router.get('/userFavoritedPosts/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({
+                code: 404,
+                msg: '用户不存在',
+            });
+        }
+
+        const favoritedPosts = await user.getFavoritedPosts({
+            attributes: ['id', 'title', 'content', 'createdAt', 'updatedAt'],
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
+            joinTableAttributes: [],
+        });
+
+        res.json({
+            code: 0,
+            msg: favoritedPosts.length ? '收藏文章加载成功' : '该用户未收藏任何文章',
+            data: {
+                posts: favoritedPosts,
+                hasMore: favoritedPosts.length === limit,
+            }
+        });
+    } catch (err) {
+        console.error('获取指定用户收藏文章失败:', err);
+        res.status(500).json({
+            code: 500,
+            msg: '获取指定用户收藏文章失败',
+        });
+    }
+});
+
 // 发布文章接口
 router.post('/publish', authMiddleware, async (req, res) => {
     try {
@@ -166,12 +327,12 @@ router.post('/publish', authMiddleware, async (req, res) => {
  */
 router.get('/list',optional, async (req, res) => {
     try {
-        let { page = 1, limit = 10 } = req.query;
+        let { page = 1, limit = 20 } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
 
         if (isNaN(page) || page < 1) page = 1;
-        if (isNaN(limit) || limit < 1) limit = 10;
+        if (isNaN(limit) || limit < 1) limit = 20;
 
         const offset = (page - 1) * limit;
 

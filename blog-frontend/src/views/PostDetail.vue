@@ -27,7 +27,8 @@
     <div class="center">
       <div class="main-content" v-if="post">
         <div class="post-top">
-          <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像" class="post-avatar" />
+          <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像"
+               @click="toUserProfile(post.userId)" class="post-avatar" />
           <div>
             <div class="post-author">{{ post.username }}</div>
             <div class="post-time">{{ formatDate(post.createdAt) }}</div>
@@ -76,7 +77,15 @@
                   <p class="comment-content">{{ comment.content }}</p>
                   <div style="display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex;gap: 20px;">
-                      <div class="comment-upvote">点赞</div>
+                      <div class="comment-upvote" @click="handleCommentLike(comment.id)">
+                        <Icon
+                            icon="material-symbols:thumb-up-rounded"
+                            width="16px"
+                            height="16px"
+                            :style="{ color: comment.liked ? '#409EFF' : '#888' }"
+                        />
+                        <span style="margin-left: 6px;">{{ comment.likeCount }}</span>
+                      </div>
                       <div class="comment-reply" @click="toggleReply(comment.id)">回复</div>
                     </div>
                     <div class="comment-time">{{ formatDate(comment.createdAt) }}</div>
@@ -118,7 +127,15 @@
                           <p class="comment-content">{{ reply.content }}</p>
                           <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex;gap: 20px;">
-                              <div class="comment-upvote">点赞</div>
+                              <div class="comment-upvote" @click="handleCommentLike(reply.id)">
+                                <Icon
+                                    icon="material-symbols:thumb-up-rounded"
+                                    width="16px"
+                                    height="16px"
+                                    :style="{ color: reply.liked ? '#409EFF' : '#888' }"
+                                />
+                                <span style="margin-left: 6px;">{{ reply.likeCount }}</span>
+                              </div>
                               <div class="comment-reply" @click="toggleReply(reply.id, reply.username)">回复</div>
                             </div>
                             <div class="comment-time">{{ formatDate(reply.createdAt) }}</div>
@@ -152,13 +169,14 @@
 
 <script setup>
 import { ref, onMounted, computed, nextTick } from "vue";
-import { useRoute } from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import * as BlogApi from "@/api";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Avatar from "@/assets/avatar/avatar.png";
 import { ElMessageBox, ElMessage } from "element-plus";
 
+const router = useRouter()
 const route = useRoute();
 const post = ref(null);
 const comments = ref([]);         // 存储评论列表
@@ -385,6 +403,38 @@ const copyLink = () => {
     ElMessage.success('链接已复制到剪贴板');
   });
 };
+
+const handleCommentLike = async (commentId) => {
+  try {
+    const res = await BlogApi.toggleCommentLike(commentId);
+    if (res.code === 0) {
+      // 先尝试在顶级评论中查找
+      let target = comments.value.find(c => c.id === commentId);
+      if (target) {
+        // 顶级评论
+        target.liked = res.data.liked;
+        target.likeCount += res.data.liked ? 1 : -1;
+      } else {
+        // 尝试在回复中查找
+        for (const comment of comments.value) {
+          const reply = comment.replies.find(r => r.id === commentId);
+          if (reply) {
+            reply.liked = res.data.liked;
+            reply.likeCount += res.data.liked ? 1 : -1;
+            break;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('点赞失败', err);
+  }
+};
+
+const toUserProfile = (userId) => {
+  router.push(`/profile/${userId}`);
+}
+
 onMounted(() => {
   loadPostDetail();
   document.addEventListener("click", handleClickOutside);
@@ -410,7 +460,7 @@ const formatDate = (date) => {
 }
 
 .left {
-  flex: 1;
+  flex: 0.5;
   display: flex;
   justify-content: center;
   .post-active{
@@ -466,6 +516,7 @@ const formatDate = (date) => {
       height: 32px;
       border-radius: 50%;
       margin-right: 10px;
+      cursor: pointer;
     }
 
     .post-author {
@@ -719,6 +770,8 @@ const formatDate = (date) => {
         }
 
         .comment-upvote {
+          display: flex;
+          align-items: center;
           font-size: 12px;
           color: #888;
           padding: 10px;

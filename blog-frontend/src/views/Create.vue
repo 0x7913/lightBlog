@@ -1,6 +1,6 @@
 <template>
   <div class="container3">
-    <el-input style="width: 100%" v-model="title" placeholder="请输入文章标题..." class="title-input"
+    <el-input style="width: 100%" v-model="title" placeholder="请输入文章标题...(5~100)" class="title-input"
       :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }">
       <template #append>
         <div @click="publishArticle" style="font-size: 14px; font-weight: 500;cursor: pointer;">发布文章</div>
@@ -28,6 +28,10 @@ onMounted(() => {
 const publishArticle = async () => {
   if (!title.value.trim()) {
     ElMessage.warning("文章标题不能为空！");
+    return;
+  }
+  if (title.value.trim().length < 5 || title.value.trim().length > 100) {
+    ElMessage.warning("标题字数应为 5~100 之间");
     return;
   }
   if (!content.value.trim()) {

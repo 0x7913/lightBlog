@@ -9,9 +9,10 @@ import Setting from "../views/Setting.vue";
 const routes = [
     { path: "/", component: Home ,name: 'home', meta: { noAuth: true } },     //首页(未登录不做拦截)
     { path: "/post/:id", component: PostDetail ,name: 'post', meta: { noAuth: true }},   //文章详情页(未登录不做拦截)
-    { path: "/create", component: Create },     //文章创建页
-    { path: "/profile", component: Profile },       //个人页面
-    { path: "/setting", component: Setting },       //设置页面
+    { path: "/create", component: Create, name: 'create' },     //文章创建页
+    { path: "/profile", component: Profile, name: 'my-profile'},       //自己的个人页面
+    { path: "/profile/:id", component: Profile, name: 'user-profile', meta: { noAuth: true } },       //他人的个人页面
+    { path: "/setting", component: Setting, name: 'setting' },       //设置页面
   ];
 
   const router = createRouter({

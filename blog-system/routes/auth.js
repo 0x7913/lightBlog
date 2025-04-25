@@ -183,6 +183,36 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
+// 通过用户 ID 获取用户信息（无需登录）
+router.get("/user/:id", optional, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (!userId) {
+      return res.json({ code: 400, data: null, msg: "缺少用户 ID" });
+    }
+
+    const user = await User.findByPk(userId, {
+      attributes: [
+        "id",
+        "username",
+        "avatar",
+        "birthday",
+        "bio",
+        "location"
+      ]
+    });
+
+    if (!user) {
+      return res.json({ code: 404, data: null, msg: "用户不存在" });
+    }
+
+    res.json({ code: 0, data: user, msg: "获取用户信息成功" });
+  } catch (err) {
+    console.error("获取用户信息失败:", err);
+    res.json({ code: 500, data: null, msg: "服务器错误" });
+  }
+});
+
 // 配置 Multer 存储头像
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

@@ -2,6 +2,7 @@
   <div class="container1" ref="containerRef">
     <div class="left"></div>
     <div class="center">
+      <template v-if="posts.length">
       <div v-for="post in posts" :key="post.id" class="post-card" @click="goToPostDetail(post.id)">
         <div class="post-top">
           <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像" class="post-avatar" />
@@ -37,6 +38,10 @@
           </div>
         </div>
       </div>
+      </template>
+      <template v-else>
+        <div class="empty-tip">暂无文章</div>
+      </template>
 
       <div v-if="loading" class="loading">加载中...</div>
       <div v-else-if="!hasMore" class="no-more">没有更多文章了</div>
@@ -79,7 +84,7 @@ const loadPosts = async () => {
   loading.value = true;
 
   try {
-    const res = await BlogApi.getPostList(page.value, 10);
+    const res = await BlogApi.getPostList(page.value, 20);
     if (res.code === 0) {
       posts.value.push(...res.data.posts);
       hasMore.value = res.data.hasMore;
@@ -178,7 +183,6 @@ const refreshPostStatus = async (post) => {
   }
 };
 
-//TODO:后续将直接刷新页面，重新调用函数，不再使用pinia缓存
 // 页面加载时触发
 onMounted(() => {
   // 检查 Pinia 中是否有缓存
@@ -292,6 +296,9 @@ const formatDate = (date) => {
     h3 {
       white-space: normal;
       word-break: break-word;
+      &:hover {
+        color: #409EFF;
+      }
     }
 
     padding-left: 46px;
@@ -311,7 +318,7 @@ const formatDate = (date) => {
         border-radius: 8px;
         cursor: pointer;
         transition: background-color 0.2s;
-        user-select: none; // 禁止文本选中
+        user-select: none;
         &:hover {
           background-color: #f6f6f6;
         }
@@ -319,18 +326,17 @@ const formatDate = (date) => {
     }
   }
 }
-
-.load-more {
+.empty-tip {
   text-align: center;
-  cursor: pointer;
-  padding: 10px;
-  border: 1px solid #007bff;
-  color: #007bff;
-  border-radius: 8px;
+  color: #999;
+  font-size: 14px;
+  margin-top: 40px;
 }
-
-.load-more:hover {
-  background: #007bff;
-  color: #fff;
+.loading,
+.no-more {
+  text-align: center;
+  font-size: 14px;
+  color: #999;
+  margin-top: 20px;
 }
 </style>
