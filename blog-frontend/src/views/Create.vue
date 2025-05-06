@@ -1,9 +1,16 @@
 <template>
   <div class="container3">
-    <el-input style="width: 100%" v-model="title" placeholder="请输入文章标题...(5~100)" class="title-input"
-      :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }">
+    <el-input
+        style="width: 100%"
+        v-model="title"
+        placeholder="请输入文章标题...(5~100)"
+        class="title-input"
+        :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }"
+    >
       <template #append>
-        <div @click="publishArticle" style="font-size: 14px; font-weight: 500;cursor: pointer;">发布文章</div>
+        <div @click="handleSubmit" style="font-size: 14px; font-weight: 500; cursor: pointer;">
+          {{ isEditMode ? '提交修改' : '发布文章' }}
+        </div>
       </template>
     </el-input>
     <MarkdownEditor v-if="content !== null" v-model="content" />
@@ -12,20 +19,43 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
-import * as BlogApi from '@/api';
+import * as BlogApi from "@/api";
 
 const title = ref("");
 const content = ref(null);
 const router = useRouter();
+const route = useRoute();
 
-onMounted(() => {
-  content.value = ""; // 确保 `content` 赋值后，MarkdownEditor 才会挂载
+const isEditMode = ref(false); // 是否是编辑模式
+const postId = ref(null);
+
+onMounted(async () => {
+  postId.value = route.query.id;
+  content.value = ""; // 确保 MarkdownEditor 正确挂载
+
+  if (postId.value) {
+    isEditMode.value = true;
+    try {
+      const res = await BlogApi.getPostDetail(postId.value);
+      if (res.code === 0) {
+        title.value = res.data.title;
+        content.value = res.data.content;
+      } else {
+        ElMessage.error("加载文章失败！");
+        router.push("/profile");
+      }
+    } catch (error) {
+      console.error("加载文章出错：", error);
+      ElMessage.error("服务器出错！");
+      router.push("/profile");
+    }
+  }
 });
 
-const publishArticle = async () => {
+const handleSubmit = async () => {
   if (!title.value.trim()) {
     ElMessage.warning("文章标题不能为空！");
     return;
@@ -44,18 +74,22 @@ const publishArticle = async () => {
       content: content.value
     };
 
-    const res = await BlogApi.createPost(payload);
+    let res;
+    if (isEditMode.value) {
+      res = await BlogApi.updatePost(postId.value, payload);
+    } else {
+      res = await BlogApi.createPost(payload);
+    }
 
     if (res.code === 0) {
-      ElMessage.success("文章发布成功！");
-      // 跳转到文章详情页
-      await router.push(`/post/${res.data.id}`);
+      ElMessage.success(isEditMode.value ? "修改成功！" : "发布成功！");
+      await router.push(`/post/${isEditMode.value ? postId.value : res.data.id}`);
     } else {
-      ElMessage.error("文章发布失败，请重试！");
+      ElMessage.error(isEditMode.value ? "修改失败，请重试！" : "发布失败，请重试！");
     }
   } catch (error) {
-    console.error("发布失败：", error);
-    ElMessage.error("发布出错，请稍后重试！");
+    console.error(isEditMode.value ? "修改出错：" : "发布出错：", error);
+    ElMessage.error("服务器出错，请稍后再试！");
   }
 };
 </script>

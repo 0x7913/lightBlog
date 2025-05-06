@@ -56,6 +56,21 @@ export const getPostList = async (page = 1, limit = 20) => {
   return await request.get(`/post/list?page=${page}&limit=${limit}`);
 };
 
+// 获取评论最多的前十篇文章
+export const getMostCommentedPosts = async () => {
+  return await request.get('/post/most-commented');
+};
+
+// 修改文章
+export const updatePost = async (postId, data) => {
+  return await request.put(`/post/${postId}`, data);
+};
+
+// 删除文章
+export const deletePost = async (postId) => {
+  return await request.delete(`/post/${postId}`);
+};
+
 // 获取文章详情
 export const getPostDetail = async (postId) => {
   return await request.get(`/post/${postId}`);

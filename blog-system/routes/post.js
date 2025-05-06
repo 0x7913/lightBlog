@@ -419,6 +419,95 @@ router.get('/list',optional, async (req, res) => {
 });
 
 /**
+ * 获取评论数量最多的前十篇文章（用于积极讨论）
+ * @route GET /api/post/most-commented
+ */
+router.get('/most-commented', async (req, res) => {
+    try {
+        const topCommentedPosts = await Post.findAll({
+            attributes: [
+                'id',
+                'title',
+                [Sequelize.literal('(SELECT COUNT(*) FROM Comments WHERE Comments.postId = Post.id)'), 'commentCount']
+            ],
+            order: [[Sequelize.literal('commentCount'), 'DESC']],
+            limit: 10,
+            raw: true
+        });
+
+        res.json({
+            code: 0,
+            msg: '获取热门讨论文章成功',
+            data: topCommentedPosts
+        });
+    } catch (error) {
+        console.error('获取热门讨论文章失败:', error);
+        res.status(500).json({ code: 500, msg: '服务器错误' });
+    }
+});
+
+/**
+ * 修改文章
+ * @route PUT /api/post/:id
+ */
+router.put('/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    const { title, content } = req.body;
+
+    try {
+        // 找到文章
+        const post = await Post.findByPk(id);
+
+        if (!post) {
+            return res.status(404).json({ code: 404, msg: '文章不存在' });
+        }
+        // 只有作者本人才能修改
+        if (post.userId !== req.user.id) {
+            return res.status(403).json({ code: 403, msg: '无权限修改该文章' });
+        }
+        // 校验标题和内容
+        if (!title || !content) {
+            return res.status(400).json({ code: 400, msg: '标题和内容不能为空' });
+        }
+        // 更新文章
+        await post.update({
+            title,
+            content
+        });
+        res.status(200).json({ code: 0, msg: '文章修改成功' });
+    } catch (error) {
+        console.error('修改文章失败:', error);
+        res.status(500).json({ code: 500, msg: '服务器错误' });
+    }
+});
+
+/**
+ * 删除文章
+ * @route DELETE /api/post/:id
+ */
+router.delete('/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // 找到文章
+        const post = await Post.findByPk(id);
+        if (!post) {
+            return res.status(404).json({ code: 404, msg: '文章不存在' });
+        }
+        // 只有作者本人才能删除
+        if (post.userId !== req.user.id) {
+            return res.status(403).json({ code: 403, msg: '无权限删除该文章' });
+        }
+        // 删除文章
+        await post.destroy();
+        res.status(200).json({ code: 0, msg: '文章删除成功' });
+    } catch (error) {
+        console.error('删除文章失败:', error);
+        res.status(500).json({ code: 500, msg: '服务器错误' });
+    }
+});
+
+/**
  * 获取文章详情页
  * @route GET /api/post/:id
  */
@@ -464,9 +553,9 @@ router.get('/:id',optional, async (req, res) => {
             content: post.content,
             createdAt: post.createdAt,
             updatedAt: post.updatedAt,
-            userId: post.userId,              // 文章作者ID
-            username: post.User.username,     // 作者用户名
-            avatar: post.User.avatar,         // 作者头像
+            userId: post.userId,
+            username: post.User.username,
+            avatar: post.User.avatar,
             commentCount,
             likeCount,
             favoriteCount,

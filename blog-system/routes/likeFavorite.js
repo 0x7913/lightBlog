@@ -18,16 +18,17 @@ router.post("/like/:postId", authMiddleware, async (req, res) => {
         const existingLike = await UserLikes.findOne({ where: { userId, postId } });
         if (existingLike) {
             await existingLike.destroy();
-            return res.json({ code: 0, msg: "取消点赞成功" });
+            return res.json({ code: 0, msg: "取消点赞成功", data: { liked: false } });
         } else {
             await UserLikes.create({ userId, postId });
-            return res.json({ code: 0, msg: "点赞成功" });
+            return res.json({ code: 0, msg: "点赞成功", data: { liked: true } });
         }
     } catch (error) {
         console.error("点赞失败:", error);
         res.status(500).json({ code: 500, msg: "服务器错误" });
     }
 });
+
 /**
  * 收藏或取消收藏(需要登录)
  * @route POST /api/favorite/:postId
@@ -43,10 +44,10 @@ router.post("/favorite/:postId", authMiddleware, async (req, res) => {
         const existingFavorite = await UserFavorites.findOne({ where: { userId, postId } });
         if (existingFavorite) {
             await existingFavorite.destroy();
-            return res.json({ code: 0, msg: "取消收藏成功" });
+            return res.json({ code: 0, msg: "取消收藏成功", data: { favorited: false } });
         } else {
             await UserFavorites.create({ userId, postId });
-            return res.json({ code: 0, msg: "收藏成功" });
+            return res.json({ code: 0, msg: "收藏成功", data: { favorited: true } });
         }
     } catch (error) {
         console.error("收藏失败:", error);

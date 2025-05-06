@@ -53,7 +53,7 @@
 
         <!-- 评论列表 -->
         <div class="comment-list" v-if="comments.length">
-          <div v-for="comment in comments" :key="comment.id" class="comment-item">
+          <div v-for="comment in comments" :id="'comment-' + comment.id"  :key="comment.id" class="comment-item">
             <div class="comment-top">
               <img :src="comment.avatar ? 'http://localhost:5000' + comment.avatar : Avatar" alt="用户头像"
                 class="comment-avatar" />
@@ -101,7 +101,7 @@
                 </div>
                 <!-- 回复评论显示 -->
                 <div v-if="comment.replies && comment.replies.length">
-                  <div v-for="reply in comment.replies" :key="reply.id" class="comment-item">
+                  <div v-for="reply in comment.replies" :id="'comment-' + reply.id" :key="reply.id" class="comment-item">
                     <div class="comment-top">
                       <img :src="reply.avatar ? 'http://localhost:5000' + reply.avatar : Avatar" alt="用户头像"
                         class="comment-avatar" />
@@ -347,7 +347,13 @@ const handleLike = async (post) => {
   try {
     const res = await BlogApi.toggleLike(post.id);
     if (res.code === 0) {
-      await refreshPostStatus(post);
+      if (res.data.liked) {
+        post.likeCount++;
+        post.userLiked = true;
+      } else {
+        post.likeCount--;
+        post.userLiked = false;
+      }
     }
   } catch (err) {
     console.error('点赞失败:', err);
@@ -375,25 +381,16 @@ const handleFavorite = async (post) => {
   try {
     const res = await BlogApi.toggleFavorite(post.id);
     if (res.code === 0) {
-      await refreshPostStatus(post);
+      if (res.data.favorited) {
+        post.favoriteCount++;
+        post.userFavorited = true;
+      } else {
+        post.favoriteCount--;
+        post.userFavorited = false;
+      }
     }
   } catch (err) {
     console.error('收藏失败:', err);
-  }
-};
-// 刷新文章状态
-const refreshPostStatus = async (post) => {
-  try {
-    const res = await BlogApi.getPostDetail(post.id);
-    if (res.code === 0) {
-      const updatedPost = res.data;
-      post.userLiked = updatedPost.userLiked;
-      post.userFavorited = updatedPost.userFavorited;
-      post.likeCount = updatedPost.likeCount;
-      post.favoriteCount = updatedPost.favoriteCount;
-    }
-  } catch (err) {
-    console.error("刷新文章状态失败:", err);
   }
 };
 //复制当前链接
@@ -435,9 +432,22 @@ const toUserProfile = (userId) => {
   router.push(`/profile/${userId}`);
 }
 
-onMounted(() => {
-  loadPostDetail();
+const scrollToHash = () => {
+  const hash = route.hash;
+  if (hash) {
+    const targetId = hash.substring(1);
+    const el = document.getElementById(targetId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+};
+
+onMounted(async () => {
+  await loadPostDetail(); // 等待文章和评论数据加载完成
   document.addEventListener("click", handleClickOutside);
+  await nextTick(); // 再等一轮 DOM 更新
+  scrollToHash();   // 最后跳转
 });
 
 const formatDate = (date) => {
@@ -492,7 +502,6 @@ const formatDate = (date) => {
 
 .right {
   flex: 2;
-  border: #007bff 1px solid;
 }
 
 .main-content {

@@ -47,23 +47,32 @@
         <!-- 根据 activeMenu 进行条件渲染 -->
         <template v-if="['posts', 'likes', 'favorites'].includes(activeMenu)">
           <template v-if="postList.length">
-            <div v-for="(post, index) in postList" :key="post.id" class="post-card-wrapper">
+            <div v-for="post in postList" @click="handlePostClick(post.id)" :key="post.id" class="post-card-wrapper">
               <div class="post-card">
                 <div class="post-title">{{ post.title }}</div>
-                <div class="post-time">{{ formatDate(post.createdAt) }}</div>
-                <!-- 你可以加更多展示内容 -->
+                <div v-if="activeMenu === 'posts'" class="post-time">发布于{{ formatDate(post.createdAt) }} | 更改于{{ formatDate(post.updatedAt) }}</div>
+                <div v-else class="post-time">{{ formatDate(post.createdAt) }}</div>
+              </div>
+              <!-- 编辑和删除按钮 -->
+              <div v-if="!route.params.id && activeMenu === 'posts'" class="post-actions">
+                <div class="ed-icon">
+                  <Icon icon="ant-design:edit-outlined" @click.stop="editPost(post.id)" class="icon"/>
+                </div>
+                <div class="ed-icon">
+                  <Icon icon="ant-design:delete-outlined" @click.stop="deletePost(post.id)" class="icon" />
+                </div>
               </div>
               <!-- 分割线：不是最后一项才显示 -->
               <el-divider/>
             </div>
           </template>
-          <template v-else>
-            <div class="empty-tip">暂无文章</div>
+          <template v-else-if="!loading">
+            <div  class="empty-tip">暂无文章</div>
           </template>
         </template>
         <template v-if="activeMenu === 'comments'">
           <template v-if="commentList.length">
-            <div v-for="comment in commentList" :key="comment.id" class="post-card-wrapper">
+            <div v-for="comment in commentList" @click="handleCommentClick(comment)" :key="comment.id" class="post-card-wrapper">
               <div class="post-card">
                 <div class="comment-content">{{ comment.content }}</div>
                 <div class="post-time">{{ formatDate(comment.createdAt) }}</div>
@@ -71,7 +80,7 @@
               <el-divider/>
             </div>
           </template>
-          <template v-else>
+          <template v-else-if="!loading">
             <div class="empty-tip">暂无评论记录</div>
           </template>
         </template>
@@ -89,7 +98,7 @@ import {ref, onMounted, onUnmounted, nextTick, watch} from "vue";
 import {useRouter, useRoute} from "vue-router";
 import * as BlogApi from '@/api';
 import Avatar from '@/assets/avatar/avatar.png'
-import {ElMessage} from "element-plus";
+import { ElMessageBox, ElMessage } from "element-plus";
 
 const userInfo = ref(null)
 const router = useRouter()
@@ -134,7 +143,7 @@ const loadData = async () => {
   loading.value = true;
   try {
     const userId = route.params.id;
-    let res;
+    let res: any;
     switch (activeMenu.value) {
       case "posts":
         res = userId
@@ -201,7 +210,44 @@ const initObserver = () => {
   observer.observe(observerTarget.value);
 };
 
-const formatDate = (date) => {
+const handlePostClick = (postId:string) => {
+  if (!postId) return;
+  router.push(`/post/${postId}`);
+}
+
+const handleCommentClick = (comment:any) => {
+  if (!comment.postId || !comment.id) return;
+  router.push(`/post/${comment.postId}#comment-${comment.id}`);
+};
+
+const editPost = (postId: string) => {
+  router.push({ name: 'create', query: { id: postId } });
+};
+
+const deletePost = async (postId: string) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这篇文章吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    });
+    const res = await BlogApi.deletePost(postId);
+    if (res.code === 0) {
+      ElMessage.success('文章删除成功');
+      // 重新加载数据
+      postList.value = [];
+      page.value = 1;
+      hasMore.value = true;
+      await loadData();
+    } else {
+      ElMessage.error(res.msg || '删除失败');
+    }
+  } catch (error) {
+    console.error("删除文章失败", error);
+  }
+};
+
+const formatDate = (date:any) => {
   const d = new Date(date);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');  // 月份补0
@@ -326,11 +372,12 @@ watch(() => route.params.id, () => {
   .postsList {
     flex: 6;
     background-color: #fff;
-    padding: 0 20px 20px 20px;
+    padding: 4px  20px 20px 20px;
     border-radius: 8px;
     height: 100%;
 
     .post-card-wrapper {
+      position: relative;
       .post-card {
         border-radius: 6px;
         transition: box-shadow 0.3s;
@@ -344,7 +391,6 @@ watch(() => route.params.id, () => {
         .comment-content{
           font-size: 14px;
           line-height: 1.6;
-          white-space: normal;
           word-break: break-word;
           white-space: pre-wrap;
           color: #333;
@@ -354,6 +400,32 @@ watch(() => route.params.id, () => {
           font-size: 12px;
           margin-top: 10px;
           color: #666;
+        }
+      }
+      .post-actions{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        position: absolute;
+        right: -110px;
+        top: 26px;
+        .ed-icon{
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          transition: background 0.2s;
+          cursor: pointer;
+          .icon{
+            width: 23px;
+            height: 23px;
+            color: #999;
+          }
+          &:hover {
+            background: #eaeaea;
+          }
         }
       }
 

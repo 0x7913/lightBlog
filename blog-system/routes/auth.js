@@ -126,7 +126,7 @@ router.post("/register", async (req, res) => {
 
     const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
     if (existingUser) {
-      return res.json({ code: 400, data: null, msg: "用户名或邮箱已被注册" });
+      return res.json({ code: 409, data: null, msg: "用户名或邮箱已被注册" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -249,7 +249,7 @@ router.put("/update-profile", authMiddleware, async (req, res) => {
     // 查找用户
     const user = await User.findByPk(userId);
     if (!user) {
-      return res.json({ code: 1, data: null, msg: "用户不存在" });
+      return res.json({ code: 404, data: null, msg: "用户不存在" });
     }
 
     // 更新信息（如果前端没传 `username` 或 `avatar`，就保持原值）

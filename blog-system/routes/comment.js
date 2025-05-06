@@ -91,7 +91,7 @@ router.post("/:postId", authMiddleware, async (req, res) => {
         if (parentId) {
             const parentComment = await Comment.findByPk(parentId);
             if (!parentComment) {
-                return res.status(400).json({ code: 400, msg: "父评论不存在" });
+                return res.status(404).json({ code: 404, msg: "父评论不存在" });
             }
         }
 

@@ -3,41 +3,41 @@
     <div class="left"></div>
     <div class="center">
       <template v-if="posts.length">
-      <div v-for="post in posts" :key="post.id" class="post-card" @click="goToPostDetail(post.id)">
-        <div class="post-top">
-          <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像" class="post-avatar" />
-          <div>
-            <div class="post-author">{{ post.author }}</div>
-            <div class="post-time">{{ formatDate(post.createdAt) }}</div>
-          </div>
-        </div>
-        <div class="post-content">
-          <h3>{{ post.title }}</h3>
-<!--          TODO:标签-->
-<!--          <div>标签</div>-->
-          <div class="post-active">
-            <div style="display: flex; gap: 20px; align-items: center;">
-              <div @click.stop="handleLike(post)" class="flex-center">
-                <Icon icon="ic:sharp-favorite" width="17px" height="17px" :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1"
-                  stroke="#000" />
-                {{ post.likeCount }}
-                喜欢
-              </div>
-              <div class="flex-center">
-                <Icon icon="gravity-ui:comment-fill" width="16px" height="16px" style="color: #fff" stroke-width="0.7"
-                  stroke="#000" />
-                {{ post.commentCount }}
-                评论
-              </div>
-            </div>
-            <div @click.stop="handleFavorite(post)" class="flex-center">
-<!--              {{ post.favoriteCount }}-->
-              <Icon icon="fontisto:favorite" width="16px" height="16px" :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
-                stroke="#000" />
+        <div v-for="post in posts" :key="post.id" class="post-card" @click="goToPostDetail(post.id)">
+          <div class="post-top">
+            <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像" class="post-avatar" />
+            <div>
+              <div class="post-author">{{ post.author }}</div>
+              <div class="post-time">{{ formatDate(post.createdAt) }}</div>
             </div>
           </div>
+          <div class="post-content">
+            <h3>{{ post.title }}</h3>
+  <!--          TODO:标签-->
+  <!--          <div>标签</div>-->
+            <div class="post-active">
+              <div style="display: flex; gap: 20px; align-items: center;">
+                <div @click.stop="handleLike(post)" class="flex-center">
+                  <Icon icon="ic:sharp-favorite" width="17px" height="17px" :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1"
+                    stroke="#000" />
+                  {{ post.likeCount }}
+                  喜欢
+                </div>
+                <div class="flex-center">
+                  <Icon icon="gravity-ui:comment-fill" width="16px" height="16px" style="color: #fff" stroke-width="0.7"
+                    stroke="#000" />
+                  {{ post.commentCount }}
+                  评论
+                </div>
+              </div>
+              <div @click.stop="handleFavorite(post)" class="flex-center">
+  <!--              {{ post.favoriteCount }}-->
+                <Icon icon="fontisto:favorite" width="16px" height="16px" :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
+                  stroke="#000" />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
       </template>
       <template v-else>
         <div class="empty-tip">暂无文章</div>
@@ -47,7 +47,22 @@
       <div v-else-if="!hasMore" class="no-more">没有更多文章了</div>
       <div ref="observerTarget" class="observer-target"></div>
     </div>
-    <div class="right"></div>
+    <div class="right">
+      <div class="right-container">
+        <h3 style="padding-left: 20px">热门讨论</h3>
+        <el-divider/>
+        <div v-if="hotPosts.length">
+          <div v-for="post in hotPosts" :key="post.id">
+            <div class="info" @click="goToPostDetailFromHot(post.id)">
+              <div class="title">{{ post.title }}</div>
+              <div class="count">评论数：{{ post.commentCount }}</div>
+            </div>
+            <el-divider/>
+          </div>
+        </div>
+        <div v-else class="empty-tip">暂无热门讨论</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -60,6 +75,7 @@ import * as BlogApi from '@/api';
 import { eventBus } from '@/utils/eventBus';
 
 const store = usePostStore();
+const hotPosts = ref([]);
 const posts = ref([]);
 const page = ref(1);
 const hasMore = ref(true);
@@ -141,7 +157,13 @@ const handleLike = async (post) => {
   try {
     const res = await BlogApi.toggleLike(post.id);
     if (res.code === 0) {
-      await refreshPostStatus(post);
+      if (res.data.liked) {
+        post.likeCount++;
+        post.userLiked = true;
+      } else {
+        post.likeCount--;
+        post.userLiked = false;
+      }
     }
   } catch (err) {
     console.error('点赞失败:', err);
@@ -152,36 +174,36 @@ const handleFavorite = async (post) => {
   try {
     const res = await BlogApi.toggleFavorite(post.id);
     if (res.code === 0) {
-      await refreshPostStatus(post);
+      if (res.data.favorited) {
+        post.favoriteCount++;
+        post.userFavorited = true;
+      } else {
+        post.favoriteCount--;
+        post.userFavorited = false;
+      }
     }
   } catch (err) {
     console.error('收藏失败:', err);
   }
 };
-
-// 刷新文章的状态
-const refreshPostStatus = async (post) => {
+const getMostCommentedPosts = async () => {
   try {
-    const res = await BlogApi.getPostDetail(post.id);
+    const res = await BlogApi.getMostCommentedPosts();
     if (res.code === 0) {
-      const updatedPost = res.data;
-
-      // 找到 posts 中对应项的索引，并替换为新的对象（强响应式）
-      const index = posts.value.findIndex(p => p.id === post.id);
-      if (index !== -1) {
-        posts.value[index] = {
-          ...posts.value[index],
-          userLiked: updatedPost.userLiked,
-          userFavorited: updatedPost.userFavorited,
-          likeCount: updatedPost.likeCount,
-          favoriteCount: updatedPost.favoriteCount
-        };
-      }
+      hotPosts.value = res.data;
+    } else {
+      console.warn('获取热门文章失败:', res.msg);
     }
   } catch (err) {
-    console.error('刷新文章状态失败:', err);
+    console.error('请求出错:', err);
   }
+}
+
+// 跳转到文章详情页
+const goToPostDetailFromHot = (postId) => {
+  router.push(`/post/${postId}`);
 };
+
 
 // 页面加载时触发
 onMounted(() => {
@@ -200,6 +222,7 @@ onMounted(() => {
     // 没有缓存数据，加载新文章
     loadPosts();
   }
+  getMostCommentedPosts();
   // 监听刷新事件
   eventBus.on('refresh-posts', () => {
     posts.value = [];
@@ -242,7 +265,7 @@ const formatDate = (date) => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 10px;
+  gap: 15px;
   margin: 0 10%;
   padding-top: 60px;
 }
@@ -253,12 +276,11 @@ const formatDate = (date) => {
 }
 
 .center {
-  flex: 3
+  flex: 3;
 }
 
 .right {
   flex: 1.5;
-  border: #007bff 1px solid;
 }
 
 .post-card {
@@ -338,5 +360,29 @@ const formatDate = (date) => {
   font-size: 14px;
   color: #999;
   margin-top: 20px;
+}
+.right-container{
+  padding: 10px 0 0 0;
+  border-radius: 8px;
+  background-color: #ffffff;
+  cursor: pointer;
+  .info{
+    padding: 0 20px;
+    .title{
+      color: #404040;
+      margin-bottom: 9px;
+    }
+    .title:hover {
+      color: #409EFF;
+    }
+    .count{
+      color: #575757;
+      font-size: 14px;
+    }
+  }
+  :deep(.el-divider--horizontal) {
+    margin: 16px 0;
+    border-top: 1px #f6f6f6 solid;
+  }
 }
 </style>
