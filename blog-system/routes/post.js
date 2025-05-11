@@ -1,5 +1,5 @@
 const express = require("express");
-const { Post, User, Comment, UserLikes, UserFavorites } = require("../models");
+const { Post, User, Comment, UserLikes, UserFavorites, Tag } = require("../models");
 const { Op, Sequelize } = require('sequelize');
 const multer = require("multer");
 const path = require("path");
@@ -292,26 +292,33 @@ router.get('/userFavoritedPosts/:userId', async (req, res) => {
 // 发布文章接口
 router.post('/publish', authMiddleware, async (req, res) => {
     try {
-        const { title, content } = req.body;
-
-        // 校验标题和内容
+        const { title, content, tags = [] } = req.body;
         if (!title || !content) {
             return res.status(400).json({ code: 400, msg: '标题和内容不能为空' });
         }
-
+        if (tags.length > 5) {
+            return res.status(400).json({ code: 401, msg: '最多只能选择5个标签' });
+        }
         // 创建文章
         const newPost = await Post.create({
             title,
             content,
-            userId: req.user.id,  // 使用 authMiddleware 添加的用户 ID
+            userId: req.user.id
         });
 
+        // 处理标签（查找已有的 + 创建新的）
+        const tagInstances = [];
+        for (const tagName of tags) {
+            const [tag] = await Tag.findOrCreate({ where: { name: tagName.trim() } });
+            tagInstances.push(tag);
+        }
+
+        // 建立关联
+        await newPost.setTags(tagInstances);
         res.status(201).json({
             code: 0,
             msg: '文章发布成功',
-            data: {
-                id: newPost.id
-            }
+            data: { id: newPost.id }
         });
     } catch (error) {
         console.error("发布文章失败:", error);
@@ -320,24 +327,29 @@ router.post('/publish', authMiddleware, async (req, res) => {
 });
 
 /**
- * 分页加载文章列表，返回评论数量
+ * 分页加载文章列表
  * @route GET /api/post/list
  * @queryParam {number} page - 当前页码（从1开始）
- * @queryParam {number} limit - 每次加载数量（默认10）
+ * @queryParam {number} limit - 每次加载数量（默认20）
+ * @queryParam {string} tags - 标签名称，多个标签以逗号分隔（可选）
  */
-router.get('/list',optional, async (req, res) => {
+router.get('/list', optional, async (req, res) => {
     try {
-        let { page = 1, limit = 20 } = req.query;
+        let { page = 1, limit = 20, tags } = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
-
         if (isNaN(page) || page < 1) page = 1;
         if (isNaN(limit) || limit < 1) limit = 20;
-
         const offset = (page - 1) * limit;
 
-        // 查询文章列表，同时统计评论、点赞和收藏数量
-        const posts = await Post.findAll({
+        // 解析标签筛选条件
+        let tagFilter = [];
+        if (tags && typeof tags === 'string') {
+            tagFilter = tags.split(',').map(tag => tag.trim()).filter(Boolean);
+        }
+
+        // 构建查询条件
+        const postQuery = {
             attributes: [
                 'id',
                 'title',
@@ -353,40 +365,34 @@ router.get('/list',optional, async (req, res) => {
                 {
                     model: User,
                     attributes: ['username', 'avatar']
+                },
+                {
+                    model: Tag,
+                    as: 'Tags',
+                    attributes: ['name'],
+                    through: { attributes: [] },
+                    ...(tagFilter.length > 0 ? {
+                        where: { name: tagFilter }
+                    } : {})
                 }
             ],
             limit,
             offset,
             order: [['createdAt', 'DESC']],
-            raw: true,
-            nest: true
-        });
+            distinct: true  // 避免标签过滤导致分页出错
+        };
 
-        // 针对每篇文章检查当前登录用户是否已点赞或收藏
+        const posts = await Post.findAll(postQuery);
         const result = await Promise.all(posts.map(async (post) => {
             let userLiked = false;
             let userFavorited = false;
             if (req.user) {
-                // 直接查询关联表而不是 Post.count 以优化性能
-                userLiked = await User.findOne({
-                    include: [{
-                        model: Post,
-                        as: 'LikedPosts',
-                        where: { id: post.id }
-                    }],
-                    where: { id: req.user.id },
-                    limit: 1
-                }) !== null;
-
-                userFavorited = await User.findOne({
-                    include: [{
-                        model: Post,
-                        as: 'FavoritedPosts',
-                        where: { id: post.id }
-                    }],
-                    where: { id: req.user.id },
-                    limit: 1
-                }) !== null;
+                userLiked = await UserLikes.count({
+                    where: { userId: req.user.id, postId: post.id }
+                }) > 0;
+                userFavorited = await UserFavorites.count({
+                    where: { userId: req.user.id, postId: post.id }
+                }) > 0;
             }
 
             return {
@@ -395,9 +401,10 @@ router.get('/list',optional, async (req, res) => {
                 author: post.User.username,
                 avatar: post.User.avatar,
                 createdAt: post.createdAt,
-                commentCount: post.commentCount,
-                likeCount: post.likeCount,
-                favoriteCount: post.favoriteCount,
+                commentCount: post.getDataValue('commentCount'),
+                likeCount: post.getDataValue('likeCount'),
+                favoriteCount: post.getDataValue('favoriteCount'),
+                tags: post.Tags?.map(t => t.name) || [],
                 userLiked,
                 userFavorited
             };
@@ -419,7 +426,7 @@ router.get('/list',optional, async (req, res) => {
 });
 
 /**
- * 获取评论数量最多的前十篇文章（用于积极讨论）
+ * 获取评论数量最多的前九篇文章（用于积极讨论）
  * @route GET /api/post/most-commented
  */
 router.get('/most-commented', async (req, res) => {
@@ -431,7 +438,7 @@ router.get('/most-commented', async (req, res) => {
                 [Sequelize.literal('(SELECT COUNT(*) FROM Comments WHERE Comments.postId = Post.id)'), 'commentCount']
             ],
             order: [[Sequelize.literal('commentCount'), 'DESC']],
-            limit: 10,
+            limit: 9,
             raw: true
         });
 
@@ -452,12 +459,13 @@ router.get('/most-commented', async (req, res) => {
  */
 router.put('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
-    const { title, content } = req.body;
+    const { title, content, tags = [] } = req.body;
 
     try {
         // 找到文章
-        const post = await Post.findByPk(id);
-
+        const post = await Post.findByPk(id, {
+            include: [{ model: Tag, as: 'Tags' }]
+        });
         if (!post) {
             return res.status(404).json({ code: 404, msg: '文章不存在' });
         }
@@ -469,11 +477,17 @@ router.put('/:id', authMiddleware, async (req, res) => {
         if (!title || !content) {
             return res.status(400).json({ code: 400, msg: '标题和内容不能为空' });
         }
-        // 更新文章
-        await post.update({
-            title,
-            content
-        });
+        // 更新标题和内容
+        await post.update({ title, content });
+
+        // 处理标签（创建不存在的标签，并关联）
+        const tagInstances = await Promise.all(tags.map(async (tagName) => {
+            const [tag] = await Tag.findOrCreate({ where: { name: tagName.trim() } });
+            return tag;
+        }));
+
+        await post.setTags(tagInstances); // 更新中间表 PostTags
+
         res.status(200).json({ code: 0, msg: '文章修改成功' });
     } catch (error) {
         console.error('修改文章失败:', error);
@@ -521,6 +535,12 @@ router.get('/:id',optional, async (req, res) => {
                 {
                     model: User,      // 作者信息
                     attributes: ['username', 'avatar']
+                },
+                {
+                    model: Tag,
+                    as: 'Tags',
+                    attributes: ['name'],
+                    through: { attributes: [] } // 不返回中间表数据
                 }
             ],
             attributes: ['id', 'title', 'content', 'createdAt', 'updatedAt', 'userId']
@@ -556,6 +576,7 @@ router.get('/:id',optional, async (req, res) => {
             userId: post.userId,
             username: post.User.username,
             avatar: post.User.avatar,
+            tags: post.Tags?.map(tag => tag.name) || [],
             commentCount,
             likeCount,
             favoriteCount,

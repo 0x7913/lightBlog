@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const request = axios.create({
   baseURL: 'http://localhost:5000/api', // 代理到后端
-  timeout: 10000
+  timeout: 15000
 })
 
 // 请求拦截器（自动添加 Token）

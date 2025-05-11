@@ -50,8 +50,7 @@
             <div v-for="post in postList" @click="handlePostClick(post.id)" :key="post.id" class="post-card-wrapper">
               <div class="post-card">
                 <div class="post-title">{{ post.title }}</div>
-                <div v-if="activeMenu === 'posts'" class="post-time">发布于{{ formatDate(post.createdAt) }} | 更改于{{ formatDate(post.updatedAt) }}</div>
-                <div v-else class="post-time">{{ formatDate(post.createdAt) }}</div>
+                <div class="post-time">{{ formatDate(post.createdAt) }}</div>
               </div>
               <!-- 编辑和删除按钮 -->
               <div v-if="!route.params.id && activeMenu === 'posts'" class="post-actions">
@@ -281,7 +280,7 @@ watch(() => route.params.id, () => {
 .profile-card {
   display: flex;
   align-items: center;
-  padding: 20px;
+  padding: 20px 0 20px 20px;
   gap: 40px;
   margin-bottom: 20px;
 

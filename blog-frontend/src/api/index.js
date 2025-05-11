@@ -52,8 +52,12 @@ export const createPost = async (data) => {
 };
 
 // 获取文章列表
-export const getPostList = async (page = 1, limit = 20) => {
-  return await request.get(`/post/list?page=${page}&limit=${limit}`);
+export const getPostList = async (page = 1, limit = 20, tags = []) => {
+  let url = `/post/list?page=${page}&limit=${limit}`;
+  if (tags.length) {
+    url += `&tags=${encodeURIComponent(tags.join(','))}`;
+  }
+  return await request.get(url);
 };
 
 // 获取评论最多的前十篇文章
@@ -145,4 +149,14 @@ export const toggleLike = async (postId) => {
 // 收藏或取消收藏（需要登录）
 export const toggleFavorite = async (postId) => {
   return await request.post(`/likeFavorite/favorite/${postId}`);
+};
+
+// 搜索已有标签（输入关键字）
+export const searchTags = async (keyword) => {
+  return await request.get('/tag/search', { params: { keyword } });
+};
+
+// 获取所有标签
+export const getAllTags = async () => {
+  return await request.get('/tag/alltag');
 };

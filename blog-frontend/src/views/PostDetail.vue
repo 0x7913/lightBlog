@@ -35,6 +35,17 @@
           </div>
         </div>
         <h1>{{ post.title }}</h1>
+        <div class="post-tag">
+          <el-tag
+              v-for="(tag, index) in post.tags"
+              :key="index"
+              :type="getTagType(tag)"
+              type="info"
+              class="tag-item"
+          >
+            #{{ tag }}
+          </el-tag>
+        </div>
         <div class="content markdown-body" v-html="renderedContent"></div>
       </div>
       <!-- 评论区域 -->
@@ -70,7 +81,7 @@
                       </div>
                       <!-- 下拉框 -->
                       <div v-if="dropdownId === comment.id" class="dropdown-menu">
-                        <button @click="deleteComment(comment.id)" class="dropdown-item">🗑️ 删除</button>
+                        <button @click="deleteComment(comment.id)" class="dropdown-item">删除</button>
                       </div>
                     </div>
                   </div>
@@ -120,7 +131,7 @@
                               </div>
                               <!-- 下拉框 -->
                               <div v-if="dropdownId === reply.id" class="dropdown-menu">
-                                <button @click="deleteComment(reply.id)" class="dropdown-item">🗑️ 删除</button>
+                                <button @click="deleteComment(reply.id)" class="dropdown-item">删除</button>
                               </div>
                             </div>
                           </div>
@@ -185,6 +196,9 @@ const commentCount = ref();        // 评论总数
 const replyComment = ref(""); // 回复输入框
 const replyingCommentId = ref({}); // 记录当前正在回复的评论 ID
 const commentInputRef = ref(null);
+import { useTagColor } from '@/composables/useTagColor';
+
+const { getTagType } = useTagColor();
 
 // 切换回复框的显示
 const toggleReply = (commentId, replyToUsername = null) => {
@@ -515,6 +529,12 @@ const formatDate = (date) => {
     word-break: break-word;
   }
 
+  .post-tag{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
   .post-top {
     display: flex;
     align-items: center;
@@ -541,7 +561,7 @@ const formatDate = (date) => {
   }
 
   .content {
-    margin-top: 70px;
+    margin-top: 20px;
   }
 
   .markdown-body {
