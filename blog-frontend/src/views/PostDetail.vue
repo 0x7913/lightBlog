@@ -186,6 +186,8 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Avatar from "@/assets/avatar/avatar.png";
 import { ElMessageBox, ElMessage } from "element-plus";
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css';
 
 const router = useRouter()
 const route = useRoute();
@@ -235,6 +237,15 @@ const canDelete = (comment) => {
   return userInfo.id === comment.userId || userInfo.id === post.value.userId;
 };
 
+// 配置 marked 使用 highlight.js
+marked.setOptions({
+  highlight(code, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang }).value;
+    }
+    return hljs.highlightAuto(code).value;
+  }
+});
 // 将 Markdown 转换为安全的 HTML
 const renderedContent = computed(() => {
   if (!post.value || !post.value.content) return "";
@@ -459,9 +470,11 @@ const scrollToHash = () => {
 
 onMounted(async () => {
   await loadPostDetail(); // 等待文章和评论数据加载完成
+  await nextTick(() => {
+    hljs.highlightAll(); // 高亮代码块
+    scrollToHash();      // 滚动到锚点
+  });
   document.addEventListener("click", handleClickOutside);
-  await nextTick(); // 再等一轮 DOM 更新
-  scrollToHash();   // 最后跳转
 });
 
 const formatDate = (date) => {
