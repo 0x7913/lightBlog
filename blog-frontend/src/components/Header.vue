@@ -118,7 +118,7 @@ const loginRules = {
 const registerRules = {
     username: [
         { required: true, message: "用户名不能为空", trigger: "blur" },
-        { min: 3, max: 20, message: "用户名长度在 3 到 20 个字符", trigger: "blur" }
+        { max: 30, message: "用户名长度需在 30 个字符之内", trigger: "blur" }
     ],
     email: [
         { required: true, message: "请输入邮箱", trigger: "blur" },
@@ -162,7 +162,7 @@ const openRegister = () => {
 // 发送验证码
 const sendVerificationCode = async () => {
     // 单独验证邮箱字段
-    registerFormRef.value.validateField('email', async (errorMessage) => {
+    registerFormRef.value.validateField('email', async (errorMessage:any) => {
         if (!errorMessage) return
         try {
             const res =await BlogApi.sendCode(registerForm.value.email);
@@ -189,7 +189,7 @@ const sendVerificationCode = async () => {
 
 // 处理登录，先验证表单数据
 const handleLogin = () => {
-  loginFormRef.value.validate(async (valid) => {
+  loginFormRef.value.validate(async (valid:any) => {
     if (!valid) return;
     try {
       const res = await BlogApi.login(loginForm.value);
@@ -210,7 +210,7 @@ const handleLogin = () => {
 };
 // 处理注册，先验证表单数据
 const handleRegister = () => {
-  registerFormRef.value.validate(async (valid) => {
+  registerFormRef.value.validate(async (valid:any) => {
     if (!valid) return;
     try {
       const res = await BlogApi.register(registerForm.value);
@@ -237,7 +237,7 @@ const fetchUserInfo = async () => {
     }
 };
 
-const handleCommand = (command) => {
+const handleCommand = (command:any) => {
     switch (command) {
         case "logout":
             logout();
@@ -272,7 +272,7 @@ const logout = () => {
     router.push("/");
 }
 
-const updateUserInfo = (newUserInfo) => {
+const updateUserInfo = (newUserInfo:any) => {
     userInfo.value = newUserInfo;
 };
 // 页面加载时检查是否有用户信息

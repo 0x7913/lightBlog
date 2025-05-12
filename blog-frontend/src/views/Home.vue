@@ -265,7 +265,6 @@ const goToPostDetailFromHot = (postId) => {
   router.push(`/post/${postId}`);
 };
 
-
 // 页面加载时触发
 onMounted(() => {
   getAllTags();

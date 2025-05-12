@@ -2,33 +2,41 @@
   <div class="container2" ref="containerRef">
     <div class="left" v-if="post">
       <el-affix :offset="120">
-      <div class="post-active">
-        <div @click="handleLike(post)" class="flex-center">
-          <div><Icon icon="ic:sharp-favorite" width="24px" height="24px" :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1"
-                stroke="#000" /></div>
-          <div>{{ post.likeCount }}</div>
+        <div class="post-active">
+          <div @click="handleLike(post)" class="flex-center">
+            <div>
+              <Icon icon="ic:sharp-favorite" width="24px" height="24px"
+                    :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1"
+                    stroke="#000"/>
+            </div>
+            <div>{{ post.likeCount }}</div>
+          </div>
+          <div @click="scrollToCommentInput" class="flex-center">
+            <div>
+              <Icon icon="gravity-ui:comment-fill" width="23px" height="23px" style="color: #fff" stroke-width="0.7"
+                    stroke="#000"/>
+            </div>
+            <div>{{ post.commentCount }}</div>
+          </div>
+          <div @click="handleFavorite(post)" class="flex-center">
+            <div>
+              <Icon icon="fontisto:favorite" width="23px" height="23px"
+                    :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
+                    stroke="#000"/>
+            </div>
+            <div>{{ post.favoriteCount }}</div>
+          </div>
+          <div @click="copyLink" class="flex-center">
+            <Icon icon="tdesign:share" width="23px" height="23px"/>
+          </div>
         </div>
-        <div @click="scrollToCommentInput" class="flex-center">
-          <div><Icon icon="gravity-ui:comment-fill" width="23px" height="23px" style="color: #fff" stroke-width="0.7"
-                stroke="#000" /></div>
-          <div>{{ post.commentCount }}</div>
-        </div>
-        <div @click="handleFavorite(post)" class="flex-center">
-          <div><Icon icon="fontisto:favorite" width="23px" height="23px" :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
-                stroke="#000" /> </div>
-          <div>{{ post.favoriteCount }}</div>
-        </div>
-        <div @click="copyLink" class="flex-center">
-          <Icon icon="tdesign:share" width="23px" height="23px" />
-        </div>
-      </div>
       </el-affix>
     </div>
     <div class="center">
       <div class="main-content" v-if="post">
         <div class="post-top">
           <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像"
-               @click="toUserProfile(post.userId)" class="post-avatar" />
+               @click="toUserProfile(post.userId)" class="post-avatar"/>
           <div>
             <div class="post-author">{{ post.username }}</div>
             <div class="post-time">{{ formatDate(post.createdAt) }}</div>
@@ -54,7 +62,8 @@
 
         <!-- 发表评论 -->
         <div class="comment-form">
-          <textarea  ref="commentInputRef" v-model="newComment" placeholder="发表你的评论..." class="comment-input"></textarea>
+          <textarea ref="commentInputRef" v-model="newComment" placeholder="发表你的评论..."
+                    class="comment-input"></textarea>
           <div class="comment-btn-container">
             <button @click="submitComment" :disabled="!newComment" class="submit-btn">
               发布评论
@@ -64,10 +73,10 @@
 
         <!-- 评论列表 -->
         <div class="comment-list" v-if="comments.length">
-          <div v-for="comment in comments" :id="'comment-' + comment.id"  :key="comment.id" class="comment-item">
+          <div v-for="comment in comments" :id="'comment-' + comment.id" :key="comment.id" class="comment-item">
             <div class="comment-top">
               <img :src="comment.avatar ? 'http://localhost:5000' + comment.avatar : Avatar" alt="用户头像"
-                class="comment-avatar" />
+                   class="comment-avatar"/>
               <div class="comment-info">
                 <div style="border: 1px solid #f0f0f0; border-radius: 8px;padding: 10px;">
                   <div class="comment-detail">
@@ -77,7 +86,7 @@
                     <!-- 删除评论 -->
                     <div class="dropdown-container" v-if="canDelete(comment)" @click.stop="toggleDropdown(comment.id)">
                       <div class="menu-icon" :class="{ 'menu-hover': dropdownId === comment.id }">
-                        <Icon icon="codicon:ellipsis" width="16" height="16" />
+                        <Icon icon="codicon:ellipsis" width="16" height="16"/>
                       </div>
                       <!-- 下拉框 -->
                       <div v-if="dropdownId === comment.id" class="dropdown-menu">
@@ -112,22 +121,24 @@
                 </div>
                 <!-- 回复评论显示 -->
                 <div v-if="comment.replies && comment.replies.length">
-                  <div v-for="reply in comment.replies" :id="'comment-' + reply.id" :key="reply.id" class="comment-item">
+                  <div v-for="reply in comment.replies" :id="'comment-' + reply.id" :key="reply.id"
+                       class="comment-item">
                     <div class="comment-top">
                       <img :src="reply.avatar ? 'http://localhost:5000' + reply.avatar : Avatar" alt="用户头像"
-                        class="comment-avatar" />
+                           class="comment-avatar"/>
                       <div class="comment-info">
                         <div style="border: 1px solid #f0f0f0; border-radius: 8px;padding: 10px;">
                           <div class="comment-detail">
                             <div class="comment-author">
                               {{ reply.username }}
-                              <span v-if="reply.replyToUsername">回复 {{ reply.replyToUsername
+                              <span v-if="reply.replyToUsername">回复 {{
+                                  reply.replyToUsername
                                 }}</span>
                             </div>
                             <div class="dropdown-container" v-if="canDelete(reply)"
-                              @click.stop="toggleDropdown(reply.id)">
+                                 @click.stop="toggleDropdown(reply.id)">
                               <div class="menu-icon" :class="{ 'menu-hover': dropdownId === reply.id }">
-                                <Icon icon="codicon:ellipsis" width="16" height="16" />
+                                <Icon icon="codicon:ellipsis" width="16" height="16"/>
                               </div>
                               <!-- 下拉框 -->
                               <div v-if="dropdownId === reply.id" class="dropdown-menu">
@@ -153,10 +164,11 @@
                           </div>
                         </div>
                         <div v-if="replyingCommentId[reply.id]" class="comment-form">
-                          <textarea v-model="replyComment" placeholder="输入你的回复..." class="comment-input"></textarea>
+                          <textarea v-model="replyComment" placeholder="输入你的回复..."
+                                    class="comment-input"></textarea>
                           <div class="comment-btn-container">
                             <button @click="submitReply(comment.id, reply.username)" :disabled="!replyComment"
-                              class="submit-btn">
+                                    class="submit-btn">
                               发布评论
                             </button>
                           </div>
@@ -172,22 +184,76 @@
         <!-- 没有评论时的提示 -->
         <div v-else class="no-comment">暂无评论，快来抢沙发吧！</div>
       </div>
-
     </div>
-    <div class="right"></div>
+    <div class="right">
+      <div v-if="userInfo" class="author-card">
+        <!-- 顶部颜色条 -->
+        <div class="author-card-header"></div>
+        <!-- 内容区域 -->
+        <div class="author-card-content">
+          <div class="author-header">
+            <img
+                :src="userInfo.avatar ? 'http://localhost:5000' + userInfo.avatar : Avatar"
+                alt="用户头像"
+                class="author-avatar"
+                @click="toUserProfile(userInfo.id)"
+            />
+            <div class="author-info">
+              <div class="author-name">{{ userInfo.username }}</div>
+              <div class="author-location">{{ userInfo.location || '暂未填写地址' }}</div>
+            </div>
+          </div>
+          <div class="author-bio">
+            {{ userInfo.bio || '这个人很神秘，什么也没写~' }}
+          </div>
+          <div class="author-extra">
+            <div class="author-extra-item">
+              <Icon icon="iconoir:birthday-cake" class="author-extra-icon"/>
+              <span class="author-extra-label">生日：</span>{{ formatDate(userInfo.birthday) }}
+            </div>
+            <div class="author-extra-item">
+              <Icon icon="fluent:person-clock-24-regular" class="author-extra-icon"/>
+              <span class="author-extra-label">加入时间：</span>{{ formatDate(userInfo.createdAt) }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-if="authorPosts.length > 0 && userInfo" class="author-posts">
+        <h3 style="padding-left: 20px">{{ userInfo.username }} 的更多文章</h3>
+        <el-divider/>
+        <div v-for="post in authorPosts" :key="post.id">
+          <div class="info" @click="goToPostDetail(post.id)">
+            <div class="title">{{ post.title }}</div>
+            <div class="post-tag">
+              <el-tag
+                  v-for="(tag, index) in post.Tags"
+                  :key="index"
+                  :type="getTagType(tag.name)"
+                  type="info"
+                  class="tag-item"
+              >
+                #{{ tag.name }}
+              </el-tag>
+            </div>
+          </div>
+          <el-divider/>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick } from "vue";
+import {ref, onMounted, computed, nextTick, watch} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import * as BlogApi from "@/api";
-import { marked } from "marked";
+import {marked} from "marked";
 import DOMPurify from "dompurify";
 import Avatar from "@/assets/avatar/avatar.png";
-import { ElMessageBox, ElMessage } from "element-plus";
+import {ElMessageBox, ElMessage} from "element-plus";
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
+import {useTagColor} from '@/composables/useTagColor';
 
 const router = useRouter()
 const route = useRoute();
@@ -198,18 +264,42 @@ const commentCount = ref();        // 评论总数
 const replyComment = ref(""); // 回复输入框
 const replyingCommentId = ref({}); // 记录当前正在回复的评论 ID
 const commentInputRef = ref(null);
-import { useTagColor } from '@/composables/useTagColor';
+const userInfo = ref(null)
+const authorPosts = ref([])
 
-const { getTagType } = useTagColor();
+const {getTagType} = useTagColor();
+
+const fetchUserInfo = async (userId) => {
+  try {
+    const res = await BlogApi.getUserInfoById(userId)
+    userInfo.value = res.data;
+  } catch (error) {
+    console.error("获取用户信息失败", error);
+  }
+};
+
+const fetchAuthorPosts = async (userId, postId) => {
+  try {
+    const res = await BlogApi.getAllPostsByUser(userId);
+    authorPosts.value = res.data.filter(post => post.id !== postId);
+  } catch (err) {
+    console.error("获取作者其他文章失败", err);
+  }
+};
+
+const goToPostDetail = async (postId) => {
+  await router.push(`/post/${postId}`);
+  await loadPostDetail()
+}
 
 // 切换回复框的显示
-const toggleReply = (commentId, replyToUsername = null) => {
+const toggleReply = (commentId) => {
   // 如果当前点击的是已展开的回复框，则关闭
   if (replyingCommentId.value[commentId]) {
     replyingCommentId.value = {};  // 关闭所有输入框
     replyComment.value = "";
   } else {
-    replyingCommentId.value = { [commentId]: true };  // 只展开当前的输入框
+    replyingCommentId.value = {[commentId]: true};  // 只展开当前的输入框
     replyComment.value = "";
   }
 };
@@ -241,7 +331,7 @@ const canDelete = (comment) => {
 marked.setOptions({
   highlight(code, lang) {
     if (lang && hljs.getLanguage(lang)) {
-      return hljs.highlight(code, { language: lang }).value;
+      return hljs.highlight(code, {language: lang}).value;
     }
     return hljs.highlightAuto(code).value;
   }
@@ -262,7 +352,12 @@ const loadPostDetail = async () => {
     if (res.code === 0) {
       post.value = res.data;
       commentCount.value = res.data.commentCount;
+      await fetchUserInfo(res.data.userId)
+      await fetchAuthorPosts(res.data.userId, res.data.id)
       await loadComments();
+      await nextTick(() => {
+        hljs.highlightAll(); // 重新初始化所有代码块的高亮
+      });
     } else {
       console.error("加载文章失败:", res.msg);
     }
@@ -321,10 +416,10 @@ const submitReply = async (commentId, replyToUsername = null) => {
 
   try {
     const res = await BlogApi.createComment(
-      post.value.id,
-      replyComment.value,
-      commentId,  // 被回复的评论ID
-      replyToUsername  // 被回复的用户名
+        post.value.id,
+        replyComment.value,
+        commentId,  // 被回复的评论ID
+        replyToUsername  // 被回复的用户名
     );
 
     if (res.code === 0) {
@@ -463,7 +558,7 @@ const scrollToHash = () => {
     const targetId = hash.substring(1);
     const el = document.getElementById(targetId);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.scrollIntoView({behavior: 'smooth', block: 'center'});
     }
   }
 };
@@ -477,6 +572,8 @@ onMounted(async () => {
   document.addEventListener("click", handleClickOutside);
 });
 
+watch(() => route.params.id, loadPostDetail);
+
 const formatDate = (date) => {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -486,7 +583,7 @@ const formatDate = (date) => {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .container2 {
   display: flex;
   justify-content: space-between;
@@ -500,12 +597,14 @@ const formatDate = (date) => {
   flex: 0.5;
   display: flex;
   justify-content: center;
-  .post-active{
+
+  .post-active {
     display: flex;
     flex-direction: column;
     gap: 30px;
     color: #666;
-    .flex-center{
+
+    .flex-center {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -515,6 +614,7 @@ const formatDate = (date) => {
       cursor: pointer;
       transition: background-color 0.2s;
       user-select: none;
+
       &:hover {
         background-color: #eaeaea;
         border-radius: 6px;
@@ -528,7 +628,130 @@ const formatDate = (date) => {
 }
 
 .right {
-  flex: 2;
+  flex: 2.3;
+
+  .author-card {
+    background-color: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+
+    .author-card-header {
+      height: 30px;
+      background-color: #aaa;
+    }
+
+    .author-card-content {
+      padding: 16px;
+    }
+
+    .author-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .author-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 16px;
+      cursor: pointer;
+      border: 2px solid #eee;
+      transition: transform 0.3s ease;
+    }
+
+    .author-avatar:hover {
+      transform: scale(1.05);
+    }
+
+    .author-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .author-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .author-location {
+      font-size: 14px;
+      color: #777;
+    }
+
+    .author-bio {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .author-extra {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .author-extra-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .author-extra-icon {
+      width: 16px;
+      height: 16px;
+      color: #888;
+    }
+
+    .author-extra-label {
+      font-weight: 500;
+      color: #555;
+    }
+  }
+
+  .author-posts {
+    padding: 10px 0 0 0;
+    border-radius: 8px;
+    background-color: #ffffff;
+    cursor: pointer;
+    margin: 10px 0;
+
+    .info {
+      padding: 0 20px;
+
+      .title {
+        font-size: 14.5px;
+        color: #404040;
+        margin-bottom: 9px;
+      }
+
+      .title:hover {
+        color: #409EFF;
+      }
+    }
+  }
+  :deep(.el-tag .el-tag__content){
+    max-width: 295px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  :deep(.el-divider--horizontal) {
+    margin: 16px 0;
+    border-top: 1.4px #f6f6f6 solid;
+  }
+}
+
+
+.post-tag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .main-content {
@@ -540,12 +763,6 @@ const formatDate = (date) => {
   h1 {
     white-space: normal;
     word-break: break-word;
-  }
-
-  .post-tag{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
   }
 
   .post-top {
@@ -685,6 +902,8 @@ const formatDate = (date) => {
     outline: none;
     font-size: 16px;
     transition: border 0.2s;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 
     &:focus {
       border: 1px solid #007bff;
@@ -724,9 +943,6 @@ const formatDate = (date) => {
   gap: 20px;
 
   .comment-item {
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-
     .comment-top {
       display: flex;
       align-items: flex-start;
@@ -847,19 +1063,156 @@ const formatDate = (date) => {
           margin-top: 10px;
           font-size: 14px;
           line-height: 1.6;
-          white-space: normal;
           word-break: break-word;
           white-space: pre-wrap;
         }
       }
-
     }
-
   }
 
   .no-comment {
     text-align: center;
     color: #aaa;
   }
+}
+/* 基础文本样式 */
+:deep(.markdown-body) {
+  line-height: 1.8;
+  white-space: normal;
+  word-break: break-word;
+  color: #333; // 新增：基础文字颜色
+}
+
+/* 标题样式（新增） */
+:deep(.markdown-body h1),
+:deep(.markdown-body h2),
+:deep(.markdown-body h3),
+:deep(.markdown-body h4),
+:deep(.markdown-body h5),
+:deep(.markdown-body h6) {
+  margin: 1.2em 0 0.6em;
+  font-weight: 600;
+  color: #111;
+}
+
+/* 图片样式 */
+:deep(.markdown-body img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  margin: 1rem 0; // 新增：图片边距
+}
+
+/* 行内代码 */
+:deep(.markdown-body code) {
+  background-color: var(--gray-100);
+  color: var(--tw-prose-code);
+  padding: .15rem .3rem;
+  font-weight: 500;
+  border-radius: .25rem;
+}
+
+/* 代码块 */
+:deep(.markdown-body pre) {
+  border-radius: 8px;
+  overflow: auto;
+  margin: 16px 0;
+  background: #282c34; // 新增：代码块背景色
+  padding: 1rem; // 新增：内边距
+}
+
+:deep(.markdown-body pre code) {
+  background: transparent; // 修改：改为透明，因为父级已有背景
+  color: #abb2bf;
+  padding: 0; // 修改：去除padding，由pre提供
+  border-radius: 0; // 修改：去除圆角，由pre提供
+  display: block;
+  overflow-x: auto;
+}
+
+/* 引用块（新增） */
+:deep(.markdown-body blockquote) {
+  border-left: 4px solid #ddd;
+  padding: 0 1rem;
+  margin: 1rem 0;
+  color: #666;
+}
+
+/* 列表样式（新增） */
+:deep(.markdown-body ul),
+:deep(.markdown-body ol) {
+  padding-left: 1.5em;
+  margin: 1rem 0;
+}
+
+:deep(.markdown-body li) {
+  margin: 0.4em 0;
+}
+
+/* 表格样式 */
+:deep(.markdown-body table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+:deep(.markdown-body th) {
+  background-color: #f4f4f4;
+  color: #333;
+  font-weight: bold;
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+:deep(.markdown-body td) {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+/* 链接样式 */
+:deep(.markdown-body a) {
+  color: #1e88e5;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  border-bottom: 1px solid rgba(30, 136, 229, 0.5);
+}
+
+:deep(.markdown-body a:hover) {
+  color: #1565c0;
+  border-bottom: 1px solid rgba(21, 101, 192, 0.7);
+}
+
+:deep(.markdown-body a:active) {
+  color: #0d47a1;
+}
+
+/* 分割线（新增） */
+:deep(.markdown-body hr) {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 2rem 0;
+}
+
+/* 强调文本（新增） */
+:deep(.markdown-body strong) {
+  font-weight: 600;
+  color: #111;
+}
+
+:deep(.markdown-body em) {
+  font-style: italic;
+}
+
+/* 任务列表（新增） */
+:deep(.markdown-body .task-list-item) {
+  list-style-type: none;
+}
+
+:deep(.markdown-body .task-list-item-checkbox) {
+  margin-right: 0.5em;
 }
 </style>

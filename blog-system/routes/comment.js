@@ -33,7 +33,7 @@ router.get('/myComments', authMiddleware, async (req, res) => {
 });
 
 // 获取指定用户的评论列表
-router.get('/userComments/:userId', async (req, res) => {
+router.get('/userComments/userComments-:userId', async (req, res) => {
     const { userId } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
@@ -72,7 +72,7 @@ router.get('/userComments/:userId', async (req, res) => {
  * @route POST /api/comment/:postId
  * @desc 需要登录
  */
-router.post("/:postId", authMiddleware, async (req, res) => {
+router.post("/publishComment-:postId", authMiddleware, async (req, res) => {
     const { postId } = req.params;
     const { content, parentId, replyToUsername } = req.body;  // 允许携带 parentId 和 replyToUsername
 
@@ -126,7 +126,7 @@ router.post("/:postId", authMiddleware, async (req, res) => {
  * @route GET /api/comment/:postId
  * @desc 不需要登录
  */
-router.get("/:postId", optional, async (req, res) => {
+router.get("/getComments-:postId", optional, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user?.id;
     let likedCommentIds = [];
@@ -206,7 +206,7 @@ router.get("/:postId", optional, async (req, res) => {
  * @route POST /api/comment/like/:commentId
  * @desc 登录后调用
  */
-router.post('/like/:commentId', authMiddleware, async (req, res) => {
+router.post('/like/liked-:commentId', authMiddleware, async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user.id;
 
@@ -235,7 +235,7 @@ router.post('/like/:commentId', authMiddleware, async (req, res) => {
  * @route DELETE /api/comment/:commentId
  * @desc 仅限作者和评论者
  */
-router.delete("/:commentId", authMiddleware, async (req, res) => {
+router.delete("/deleteComment-:commentId", authMiddleware, async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user.id;
 

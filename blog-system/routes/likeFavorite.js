@@ -7,7 +7,7 @@ const router = express.Router();
  * 点赞或取消点赞(需要登录)
  * @route POST /api/like/:postId
  */
-router.post("/like/:postId", authMiddleware, async (req, res) => {
+router.post("/like/liked-:postId", authMiddleware, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
 
@@ -33,7 +33,7 @@ router.post("/like/:postId", authMiddleware, async (req, res) => {
  * 收藏或取消收藏(需要登录)
  * @route POST /api/favorite/:postId
  */
-router.post("/favorite/:postId", authMiddleware, async (req, res) => {
+router.post("/favorite/favorited-:postId", authMiddleware, async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
 

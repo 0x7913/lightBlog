@@ -171,7 +171,8 @@ router.get("/me", authMiddleware, async (req, res) => {
         "avatar",
         "birthday",
         "bio",
-        "location"
+        "location",
+        "createdAt"
       ]
     });
 
@@ -184,7 +185,7 @@ router.get("/me", authMiddleware, async (req, res) => {
 });
 
 // 通过用户 ID 获取用户信息（无需登录）
-router.get("/user/:id", optional, async (req, res) => {
+router.get("/user/userInfo-:id", optional, async (req, res) => {
   try {
     const userId = req.params.id;
     if (!userId) {
@@ -198,7 +199,8 @@ router.get("/user/:id", optional, async (req, res) => {
         "avatar",
         "birthday",
         "bio",
-        "location"
+        "location",
+        "createdAt"
       ]
     });
 

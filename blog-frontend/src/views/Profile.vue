@@ -11,11 +11,15 @@
           <div class="profile-subinfo">
             <div class="flex-center">
               <Icon icon="mynaui:location" width="16px" height="16px" style="color: #999"/>
-              <span class="location">{{ userInfo.location || "未填写地址" }}</span>
+              <span class="location">{{ userInfo.location || "暂时未填写地址" }}</span>
             </div>
             <div class="flex-center">
               <Icon icon="iconoir:birthday-cake" width="16px" height="16px" style="color: #999"/>
-              <span>{{ userInfo.birthday || "未设置生日" }}</span>
+              <span>{{ userInfo.birthday || "暂时未设置生日" }}</span>
+            </div>
+            <div class="flex-center">
+              <Icon icon="fluent:person-clock-24-regular" width="16px" height="16px" style="color: #999" />
+              <span>加入于 {{ formatDate(userInfo.createdAt) }}</span>
             </div>
           </div>
           <div class="profile-bio">
@@ -124,6 +128,7 @@ const fetchUserInfo = async () => {
     console.error("获取用户信息失败", error);
   }
 };
+
 const toEdit = () => {
   router.push('/setting')
 }
