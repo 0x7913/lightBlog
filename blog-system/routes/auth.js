@@ -1,19 +1,27 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { User, VerificationCode } = require("../models"); 
+const { User, VerificationCode } = require("../models");
 const { Op } = require("sequelize");
 const nodemailer = require("nodemailer");
 const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
-const authMiddleware = require("../middleware/authMiddleware");
+const { authMiddleware, optional } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 // 生成 JWT Token
 const generateToken = (user) => {
   return jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
+};
+
+const getEmailService = (email) => {
+  if (email.endsWith("@qq.com")) return "qq";
+  if (email.endsWith("@gmail.com")) return "gmail";
+  if (email.endsWith("@163.com")) return "163";
+  // if (email.endsWith("@outlook.com") || email.endsWith("@hotmail.com")) return "hotmail";
+  return null;
 };
 
 //  发送邮箱验证码
@@ -27,16 +35,62 @@ router.post("/send-code", async (req, res) => {
  // 存储验证码
     await VerificationCode.create({ email, code, expiresAt });
 // 配置邮件发送
-    const transporter = nodemailer.createTransport({
-      service: "qq",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    const emailService = getEmailService(email);
+    if (!emailService) {
+      return res.json({ code: 400, data: null, msg: "暂不支持该邮箱服务" });
+    }
+
+    let transporter;
+    let fromAddress;
+    // 根据不同的邮箱服务商配置邮件发送
+    switch (emailService) {
+      case 'qq':
+        transporter = nodemailer.createTransport({
+          service: 'qq',
+          auth: {
+            user: process.env.QQ_EMAIL_USER,
+            pass: process.env.QQ_EMAIL_PASS,
+          },
+        });
+        fromAddress = process.env.QQ_EMAIL_USER
+        break;
+      case 'gmail':
+        transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.GMAIL_EMAIL_USER,
+            pass: process.env.GMAIL_EMAIL_PASS,
+          },
+        });
+        fromAddress = process.env.GMAIL_EMAIL_USER
+        break;
+      case '163':
+        transporter = nodemailer.createTransport({
+          service: '163',
+          auth: {
+            user: process.env.EMAIL_163_USER,
+            pass: process.env.EMAIL_163_PASS,
+          },
+        });
+        fromAddress = process.env.EMAIL_163_USER
+        break;
+      // case 'hotmail':
+      //   transporter = nodemailer.createTransport({
+      //     service: 'hotmail',
+      //     auth: {
+      //       user: process.env.HOTMAIL_EMAIL_USER,
+      //       pass: process.env.HOTMAIL_EMAIL_PASS,
+      //     },
+      //   });
+      //   fromAddress = process.env.HOTMAIL_EMAIL_USER
+      //   break;
+      default:
+        return res.json({ code: 400, data: null, msg: "暂不支持该邮箱服务" });
+    }
+
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: fromAddress,
       to: email,
       subject: "你的验证码",
       text: `你的验证码是: ${code}, 5分钟内有效`,
@@ -44,6 +98,7 @@ router.post("/send-code", async (req, res) => {
 
     transporter.sendMail(mailOptions, (error) => {
       if (error) {
+        console.error("邮件发送失败详细信息：", error);
         return res.json({ code: 500, data: null, msg: "邮件发送失败" });
       }
       res.json({ code: 0, data: true, msg: "" });
@@ -71,7 +126,7 @@ router.post("/register", async (req, res) => {
 
     const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
     if (existingUser) {
-      return res.json({ code: 400, data: null, msg: "用户名或邮箱已被注册" });
+      return res.json({ code: 409, data: null, msg: "用户名或邮箱已被注册" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -79,7 +134,7 @@ router.post("/register", async (req, res) => {
 
     await validCode.destroy();
 
-    res.json({ code: 0, data: { token: generateToken(newUser) }, msg: "" });
+    res.json({ code: 0, data: { token: generateToken(newUser) }, msg: "注册成功" });
   } catch (error) {
     res.json({ code: 500, data: null, msg: "服务器错误" });
   }
@@ -95,7 +150,7 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.json({ code: 400, data: null, msg: "密码错误" });
 
-    res.json({ code: 0, data: { token: generateToken(user) }, msg: "" });
+    res.json({ code: 0, data: { token: generateToken(user) }, msg: "登录成功" });
   } catch (error) {
     res.json({ code: 500, data: null, msg: "服务器错误" });
   }
@@ -108,15 +163,55 @@ router.get("/me", authMiddleware, async (req, res) => {
     if (!token) return res.json({ code: 401, data: null, msg: "未提供 Token" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findByPk(decoded.id, { 
-      attributes: ["id", "username", "email", "avatar"]
+    const user = await User.findByPk(decoded.id, {
+      attributes: [
+        "id",
+        "username",
+        "email",
+        "avatar",
+        "birthday",
+        "bio",
+        "location",
+        "createdAt"
+      ]
     });
 
     if (!user) return res.json({ code: 404, data: null, msg: "用户不存在" });
 
-    res.json({ code: 0, data: user, msg: "" });
+    res.json({ code: 0, data: user, msg: "获取用户信息成功" });
   } catch (error) {
     res.json({ code: 401, data: null, msg: "Token 无效" });
+  }
+});
+
+// 通过用户 ID 获取用户信息（无需登录）
+router.get("/user/userInfo-:id", optional, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (!userId) {
+      return res.json({ code: 400, data: null, msg: "缺少用户 ID" });
+    }
+
+    const user = await User.findByPk(userId, {
+      attributes: [
+        "id",
+        "username",
+        "avatar",
+        "birthday",
+        "bio",
+        "location",
+        "createdAt"
+      ]
+    });
+
+    if (!user) {
+      return res.json({ code: 404, data: null, msg: "用户不存在" });
+    }
+
+    res.json({ code: 0, data: user, msg: "获取用户信息成功" });
+  } catch (err) {
+    console.error("获取用户信息失败:", err);
+    res.json({ code: 500, data: null, msg: "服务器错误" });
   }
 });
 
@@ -151,24 +246,58 @@ router.post("/upload-avatar", authMiddleware, upload.single("avatar"), (req, res
 router.put("/update-profile", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id; // 从 authMiddleware 获取用户 ID
-    const { username, avatar } = req.body; // 头像由前端上传后传 URL
+    const { username, avatar, birthday, bio, location } = req.body; // 头像由前端上传后传 URL
 
     // 查找用户
     const user = await User.findByPk(userId);
     if (!user) {
-      return res.json({ code: 1, data: null, msg: "用户不存在" });
+      return res.json({ code: 404, data: null, msg: "用户不存在" });
     }
 
     // 更新信息（如果前端没传 `username` 或 `avatar`，就保持原值）
     user.username = username || user.username;
     user.avatar = avatar || user.avatar;
+    user.birthday = birthday || user.birthday;
+    user.bio = bio || user.bio;
+    user.location = location || user.location;
 
     await user.save();
 
-    res.json({ code: 0, data: true, msg: "" }); // 成功返回 data = true，msg 为空
+    res.json({ code: 0, data: true, msg: "更新用户信息成功" });
   } catch (error) {
     console.error("更新用户信息失败:", error);
     res.status(500).json({ code: 500, data: null, msg: "服务器错误" });
+  }
+});
+
+// routes/auth.js
+router.post('/update-password', authMiddleware, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user.id; // 从 authMiddleware 中获取用户 ID
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ code: 400, msg: '缺少必要参数' });
+  }
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ code: 404, msg: '用户不存在' });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ code: 401, msg: '原密码不正确' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ code: 0, msg: '密码修改成功' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ code: 500, msg: '服务器内部错误' });
   }
 });
 
