@@ -8,7 +8,7 @@ const authMiddleware = async (req, res, next) => {
         const token = req.header("Authorization");
 
         if (!token) {
-            return res.status(401).json({ message: "未授权访问" });
+            return res.status(401).json({ code:40101, message: "未授权访问" });
         }
 
         // 验证 token
@@ -16,7 +16,7 @@ const authMiddleware = async (req, res, next) => {
         const user = await User.findByPk(decoded.id);
 
         if (!user) {
-            return res.status(401).json({ message: "用户不存在" });
+            return res.status(404).json({ code:40102, message: "用户不存在" });
         }
 
         // 将用户信息挂载到请求对象
@@ -27,5 +27,24 @@ const authMiddleware = async (req, res, next) => {
         res.status(401).json({ message: "身份验证失败" });
     }
 };
+const optional = async (req, res, next) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return next(); // 没 token 直接放行
 
-module.exports = authMiddleware;
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findByPk(decoded.id);
+        if (user) {
+            req.user = user; // 登录状态，挂上 user
+        }
+    } catch (err) {
+        // token 有问题也跳过，不抛出错误
+    }
+
+    next(); // 总是放行
+};
+
+module.exports = {
+    authMiddleware,
+    optional,
+};

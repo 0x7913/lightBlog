@@ -1,35 +1,34 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "@/views/Home.vue";
-import PostDetail from "@/views/PostDetail.vue";
-import Create from "@/views/Create.vue";
-import Profile from "@/views/Profile.vue";
-import Setting from "../views/Setting.vue";
 
-//后续会优化为懒加载
+// 懒加载组件
+const Home = () => import("@/views/Home.vue");
+const PostDetail = () => import("@/views/PostDetail.vue");
+const Create = () => import("@/views/Create.vue");
+const Profile = () => import("@/views/Profile.vue");
+const Setting = () => import("@/views/Setting.vue");
+
 const routes = [
-    { path: "/", component: Home ,name: 'home', meta: { noAuth: true } },     //首页(未登录不做拦截)
-    { path: "/post/:id", component: PostDetail ,name: 'post', meta: { noAuth: true }},   //文章详情页(未登录不做拦截)
-    { path: "/create", component: Create },     //文章创建页
-    { path: "/profile", component: Profile },       //个人页面
-    { path: "/setting", component: Setting },       //设置页面
-  ];
-  
-  const router = createRouter({
+    { path: "/", component: Home, name: "home", meta: { noAuth: true } },             // 首页
+    { path: "/post/:id", component: PostDetail, name: "post", meta: { noAuth: true } }, // 文章详情页
+    { path: "/create", component: Create, name: "create" },                           // 创建文章
+    { path: "/profile", component: Profile, name: "my-profile" },                     // 个人页面（自己）
+    { path: "/profile/:id", component: Profile, name: "user-profile", meta: { noAuth: true } }, // 他人页面
+    { path: "/setting", component: Setting, name: "setting" },                        // 设置页面
+];
+
+const router = createRouter({
     history: createWebHistory(),
     routes,
-  });
+});
 
-// 可以在前端判断是否有token，需要调用接口的地方在后端对token进行验证
-
-// 添加路由守卫
+// 路由守卫
 router.beforeEach((to, from, next) => {
     const isAuthenticated = !!localStorage.getItem("token"); // 判断是否已登录
-
     if (!isAuthenticated && !to.matched.some(record => record.meta.noAuth)) {
         next("/"); // 未登录
     } else {
         next(); // 允许访问
     }
 });
-  
-  export default router;
+
+export default router;

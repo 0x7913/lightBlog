@@ -1,11 +1,12 @@
 <template>
     <div class="top-header">
+        <div style="flex:1"></div>
         <div class="header-container">
             <div class="logo" @click="toHome()">
                 EchoLog
             </div>
         </div>
-        <div style="flex:3;"></div>
+        <div class="header-center"></div>
         <div class="sign" v-if="!userInfo?.id && !userInfo?.username && !userInfo?.email">
             <el-button size="large" text @click="openLogin()">登 录</el-button>
             <el-button size="large" @click="openRegister()">创 建 账 号</el-button>
@@ -29,7 +30,7 @@
                             </div>
                         </el-dropdown-item>
                         <div class="custom-divider"></div>
-                        <el-dropdown-item command="create">发布文章</el-dropdown-item>
+                        <el-dropdown-item command="create">创建文章</el-dropdown-item>
                         <el-dropdown-item command="settings">设置</el-dropdown-item>
                         <div class="custom-divider"></div>
                         <el-dropdown-item command="logout">退出登录</el-dropdown-item>
@@ -37,6 +38,7 @@
                 </template>
             </el-dropdown>
         </div>
+        <div style="flex:1"></div>
     </div>
 
     <!-- 登录弹窗 -->
@@ -116,7 +118,7 @@ const loginRules = {
 const registerRules = {
     username: [
         { required: true, message: "用户名不能为空", trigger: "blur" },
-        { min: 3, max: 20, message: "用户名长度在 3 到 20 个字符", trigger: "blur" }
+        { max: 30, message: "用户名长度需在 30 个字符之内", trigger: "blur" }
     ],
     email: [
         { required: true, message: "请输入邮箱", trigger: "blur" },
@@ -160,10 +162,14 @@ const openRegister = () => {
 // 发送验证码
 const sendVerificationCode = async () => {
     // 单独验证邮箱字段
-    registerFormRef.value.validateField('email', async (errorMessage) => {
+    registerFormRef.value.validateField('email', async (errorMessage:any) => {
         if (!errorMessage) return
         try {
-            await BlogApi.sendCode(registerForm.value.email);
+            const res =await BlogApi.sendCode(registerForm.value.email);
+            if (res.code !== 0) {
+              ElMessage.error(res.msg || "发送失败");
+              return;
+            }
             ElMessage.success("验证码已发送，请查收邮箱");
             // 启动倒计时
             codeTimer.value = 60;
@@ -175,39 +181,51 @@ const sendVerificationCode = async () => {
                 }
             }, 1000);
         } catch (error) {
-            ElMessage.error("验证码发送失败");
+          const msg = error.response?.data?.msg || "验证码发送失败"
+          ElMessage.error(msg);
         }
     });
 };
 
 // 处理登录，先验证表单数据
 const handleLogin = () => {
-    loginFormRef.value.validate(async (valid) => {
-        if (!valid) return;
-        try {
-            const res = await BlogApi.login(loginForm.value);
-            localStorage.setItem("token", res.data.token);
-            ElMessage.success("登录成功");
-            fetchUserInfo();
-            showLogin.value = false;
-        } catch (error) {
-            ElMessage.error("登录失败，请检查邮箱和密码");
-        }
-    });
+  loginFormRef.value.validate(async (valid:any) => {
+    if (!valid) return;
+    try {
+      const res = await BlogApi.login(loginForm.value);
+      if (res.code !== 0) {
+        ElMessage.error(res.msg || "登录失败");
+        return;
+      }
+      localStorage.setItem("token", res.data.token);
+      ElMessage.success("登录成功");
+      await fetchUserInfo();
+      eventBus.emit('refresh-posts');
+      showLogin.value = false;
+    } catch (error) {
+      const msg = error.response?.data?.msg || "登录失败，请检查网络";
+      ElMessage.error(msg);
+    }
+  });
 };
 // 处理注册，先验证表单数据
 const handleRegister = () => {
-    registerFormRef.value.validate(async (valid) => {
-        if (!valid) return;
-        try {
-            await BlogApi.register(registerForm.value);
-            ElMessage.success("注册成功，请登录");
-            showRegister.value = false;
-            showLogin.value = true;
-        } catch (error) {
-            ElMessage.error("注册失败");
-        }
-    });
+  registerFormRef.value.validate(async (valid:any) => {
+    if (!valid) return;
+    try {
+      const res = await BlogApi.register(registerForm.value);
+      if (res.code !== 0) {
+        ElMessage.error(res.msg || "注册失败");
+        return;
+      }
+      ElMessage.success("注册成功，请登录");
+      showRegister.value = false;
+      showLogin.value = true;
+    } catch (error) {
+      const msg = error.response?.data?.msg || "注册失败，请检查网络";
+      ElMessage.error(msg);
+    }
+  });
 };
 const fetchUserInfo = async () => {
     try {
@@ -219,7 +237,7 @@ const fetchUserInfo = async () => {
     }
 };
 
-const handleCommand = (command) => {
+const handleCommand = (command:any) => {
     switch (command) {
         case "logout":
             logout();
@@ -242,17 +260,19 @@ const goToCreate = () => {
     router.push("/create");
 }
 const toHome = () => {
+    eventBus.emit('refresh-posts');
     router.push("/");
 }
 const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
     userInfo.value = null;
+    eventBus.emit('refresh-posts');
     ElMessage.success("退出成功");
     router.push("/");
 }
 
-const updateUserInfo = (newUserInfo) => {
+const updateUserInfo = (newUserInfo:any) => {
     userInfo.value = newUserInfo;
 };
 // 页面加载时检查是否有用户信息
@@ -275,9 +295,9 @@ onUnmounted(() => {
     width: 100%;
     height: 56px;
     position: fixed;
-    top: 0px;
-    left: 0px;
-    right: 0px;
+    top: 0;
+    left: 0;
+    right: 0;
     z-index: 10000;
     border-bottom: 1px solid #d1d9e0;
 
@@ -285,11 +305,11 @@ onUnmounted(() => {
         flex: 1;
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: flex-start;
 
         .logo {
             background: #000;
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 4px;
             font-size: 24px;
             font-weight: bold;
@@ -297,19 +317,21 @@ onUnmounted(() => {
             cursor: pointer;
         }
     }
-
+    .header-center{
+      flex: 6.1;
+    }
     .sign {
-        flex: 1;
+        flex: 0.9;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
     }
 
     .signed {
-        flex: 1;
+        flex: 0.9;
         display: flex;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
         gap: 16px;
 
         .user-avatar {
@@ -352,7 +374,7 @@ onUnmounted(() => {
 }
 
 :deep(.el-dropdown-menu__item) {
-    border-radius: 4px;
+    border-radius: 8px;
     margin: 0 10px;
 }
 
