@@ -372,7 +372,7 @@ router.post('/publishPost', authMiddleware, async (req, res) => {
  */
 router.get('/list', optional, async (req, res) => {
     try {
-        let {page = 1, limit = 20, tags} = req.query;
+        let {page = 1, limit = 20, tags, keyword} = req.query;
         page = parseInt(page);
         limit = parseInt(limit);
         if (isNaN(page) || page < 1) page = 1;
@@ -384,9 +384,16 @@ router.get('/list', optional, async (req, res) => {
         if (tags && typeof tags === 'string') {
             tagFilter = tags.split(',').map(tag => tag.trim()).filter(Boolean);
         }
+        const where = {};
+        if (keyword && typeof keyword === 'string') {
+            where.title = {
+                [Sequelize.Op.like]: `%${keyword.trim()}%`
+            };
+        }
 
         // 构建查询条件
         const postQuery = {
+            where,
             attributes: [
                 'id',
                 'title',

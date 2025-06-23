@@ -8,7 +8,7 @@ const authMiddleware = async (req, res, next) => {
         const token = req.header("Authorization");
 
         if (!token) {
-            return res.status(401).json({ message: "未授权访问" });
+            return res.status(401).json({ code:40101, message: "未授权访问" });
         }
 
         // 验证 token
@@ -16,7 +16,7 @@ const authMiddleware = async (req, res, next) => {
         const user = await User.findByPk(decoded.id);
 
         if (!user) {
-            return res.status(404).json({ message: "用户不存在" });
+            return res.status(404).json({ code:40102, message: "用户不存在" });
         }
 
         // 将用户信息挂载到请求对象

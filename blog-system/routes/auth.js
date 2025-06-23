@@ -270,4 +270,35 @@ router.put("/update-profile", authMiddleware, async (req, res) => {
   }
 });
 
+// routes/auth.js
+router.post('/update-password', authMiddleware, async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user.id; // 从 authMiddleware 中获取用户 ID
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ code: 400, msg: '缺少必要参数' });
+  }
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({ code: 404, msg: '用户不存在' });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ code: 401, msg: '原密码不正确' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ code: 0, msg: '密码修改成功' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ code: 500, msg: '服务器内部错误' });
+  }
+});
+
 module.exports = router;

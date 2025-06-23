@@ -100,10 +100,6 @@ const handleTagChange = (newTags) => {
       ElMessage.warning(`标签“${tag.slice(0, 10)}...”超过50字符限制`);
       return false;
     }
-    if (!/^[\w\u4e00-\u9fa5]+$/.test(tag)) {
-      ElMessage.warning(`标签“${tag}”包含非法字符，仅支持中英文、数字和下划线`);
-      return false;
-    }
     return true;
   });
 

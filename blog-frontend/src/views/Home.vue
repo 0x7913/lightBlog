@@ -15,6 +15,19 @@
       </div>
     </div>
     <div class="center">
+      <el-input
+          v-model="searchInput"
+          style="width: 100%; margin-bottom: 10px"
+          size="large"
+          placeholder="请输入搜索内容"
+          @keyup.enter.native="() => loadPosts(true)"
+      >
+        <template #suffix>
+          <el-icon  @click="() => loadPosts(true)" style="cursor: pointer;">
+            <Search />
+          </el-icon>
+        </template>
+      </el-input>
       <template v-if="posts.length">
         <div v-for="post in posts" :key="post.id" class="post-card" @click="goToPostDetail(post.id)">
           <div class="post-top">
@@ -64,12 +77,12 @@
           </div>
         </div>
       </template>
-      <template v-else>
+      <template v-if="!loading && posts.length === 0">
         <div class="empty-tip">暂无文章</div>
       </template>
 
       <div v-if="loading" class="loading">加载中...</div>
-      <div v-else-if="!hasMore" class="no-more">没有更多文章了</div>
+      <div v-else-if="!loading && posts.length > 0 && !hasMore" class="no-more">没有更多文章了</div>
       <div ref="observerTarget" class="observer-target"></div>
     </div>
     <div class="right">
@@ -93,6 +106,7 @@
 
 <script setup>
 import {ref, onMounted, onUnmounted, nextTick} from 'vue';
+import { Search } from '@element-plus/icons-vue'
 import {useRouter} from 'vue-router';
 import {usePostStore} from '@/store/index';
 import Avatar from '@/assets/avatar/avatar.png'
@@ -111,6 +125,7 @@ const loading = ref(false);
 const containerRef = ref(null);
 const observerTarget = ref(null); // 目标触发点
 const router = useRouter();
+const searchInput = ref('')
 
 let observer = null;
 let timeoutId = null;  // 延迟加载的计时器
@@ -124,18 +139,16 @@ const goToPostDetail = (postId) => {
 
 // 加载文章
 const loadPosts = async (reset = false) => {
-  if (!hasMore.value || loading.value) return;
-
   if (reset) {
     posts.value = [];
     page.value = 1;
     hasMore.value = true;
   }
+  if (!hasMore.value || loading.value) return;
 
   loading.value = true;
-
   try {
-    const res = await BlogApi.getPostList(page.value, 20, selectedTags.value);
+    const res = await BlogApi.getPostList(page.value, 20, selectedTags.value, searchInput.value);
     if (res.code === 0) {
       posts.value.push(...res.data.posts);
       hasMore.value = res.data.hasMore;
@@ -337,6 +350,11 @@ const formatDate = (date) => {
 
 .center {
   flex: 3;
+  :deep(.el-input__wrapper){
+    border-radius: 8px;
+    box-shadow: none;
+
+  }
 }
 
 .right {

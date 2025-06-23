@@ -18,7 +18,6 @@ router.get("/search", async (req, res) => {
 });
 
 // 获取所有标签及使用次数
-// 获取所有标签及使用次数
 router.get("/alltag", async (req, res) => {
     try {
         const tagCounts = await Tag.findAll({

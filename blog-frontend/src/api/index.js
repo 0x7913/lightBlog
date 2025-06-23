@@ -38,6 +38,11 @@ export const updateUserInfo = async (data) => {
   return await request.put("/auth/update-profile", data);
 };
 
+// api/index.ts
+export const updatePassword = (data) => {
+  return request.post('/auth/update-password', data);
+};
+
 // 文章相关接口
 // 上传文章图片（返回头像 URL）
 export const uploadPostImage = async (formData) => {
@@ -52,10 +57,13 @@ export const createPost = async (data) => {
 };
 
 // 获取文章列表
-export const getPostList = async (page = 1, limit = 20, tags = []) => {
+export const getPostList = async (page = 1, limit = 20, tags = [], keyword = '') => {
   let url = `/post/list?page=${page}&limit=${limit}`;
   if (tags.length) {
     url += `&tags=${encodeURIComponent(tags.join(','))}`;
+  }
+  if (keyword && keyword.trim()) {
+    url += `&keyword=${encodeURIComponent(keyword.trim())}`;
   }
   return await request.get(url);
 };
