@@ -5,8 +5,8 @@
 </template>
 
 <script setup>
-import {onMounted, onBeforeUnmount, ref, watch} from "vue";
-import {ElMessage} from 'element-plus';
+import { onMounted, onBeforeUnmount, ref, watch } from "vue";
+import { ElMessage } from 'element-plus';
 import EasyMDE from "easymde";
 import "easymde/dist/easymde.min.css";
 import * as BlogApi from '@/api';
@@ -70,12 +70,12 @@ onMounted(() => {
       },
       toolbar: [
         // 保持原有的工具栏配置不变
-        {name: "bold", action: EasyMDE.toggleBold, className: "fa fa-bold", title: "加粗"},
-        {name: "italic", action: EasyMDE.toggleItalic, className: "fa fa-italic", title: "斜体"},
-        {name: "heading", action: EasyMDE.toggleHeadingSmaller, className: "fa fa-header", title: "标题"},
+        { name: "bold", action: EasyMDE.toggleBold, className: "fa fa-bold", title: "加粗" },
+        { name: "italic", action: EasyMDE.toggleItalic, className: "fa fa-italic", title: "斜体" },
+        { name: "heading", action: EasyMDE.toggleHeadingSmaller, className: "fa fa-header", title: "标题" },
         "|",
-        {name: "quote", action: EasyMDE.toggleBlockquote, className: "fa fa-quote-left", title: "引用"},
-        {name: "code", action: EasyMDE.toggleCodeBlock, className: "fa fa-code", title: "代码"},
+        { name: "quote", action: EasyMDE.toggleBlockquote, className: "fa fa-quote-left", title: "引用" },
+        { name: "code", action: EasyMDE.toggleCodeBlock, className: "fa fa-code", title: "代码" },
         {
           name: "inline-code", action: function (editor) {
             let cm = editor.codemirror;
@@ -88,22 +88,22 @@ onMounted(() => {
             cm.focus();
           }, className: "fa fa-terminal", title: "行内代码"
         },
-        {name: "unordered-list", action: EasyMDE.toggleUnorderedList, className: "fa fa-list-ul", title: "无序列表"},
-        {name: "ordered-list", action: EasyMDE.toggleOrderedList, className: "fa fa-list-ol", title: "有序列表"},
+        { name: "unordered-list", action: EasyMDE.toggleUnorderedList, className: "fa fa-list-ul", title: "无序列表" },
+        { name: "ordered-list", action: EasyMDE.toggleOrderedList, className: "fa fa-list-ol", title: "有序列表" },
         "|",
-        {name: "link", action: EasyMDE.drawLink, className: "fa fa-link", title: "插入链接"},
-        {name: "image", action: EasyMDE.drawImage, className: "fa fa-image", title: "插入图片"},
-        {name: "table", action: EasyMDE.drawTable, className: "fa fa-table", title: "插入表格"},
-        {name: "horizontal-rule", action: EasyMDE.drawHorizontalRule, className: "fa fa-minus", title: "插入水平线"},
+        { name: "link", action: EasyMDE.drawLink, className: "fa fa-link", title: "插入链接" },
+        { name: "image", action: EasyMDE.drawImage, className: "fa fa-image", title: "插入图片" },
+        { name: "table", action: EasyMDE.drawTable, className: "fa fa-table", title: "插入表格" },
+        { name: "horizontal-rule", action: EasyMDE.drawHorizontalRule, className: "fa fa-minus", title: "插入水平线" },
         "|",
-        {name: "preview", action: EasyMDE.togglePreview, className: "fa fa-eye no-disable", title: "预览"},
+        { name: "preview", action: EasyMDE.togglePreview, className: "fa fa-eye no-disable", title: "预览" },
         {
           name: "side-by-side",
           action: EasyMDE.toggleSideBySide,
           className: "fa fa-columns no-disable",
           title: "并排预览"
         },
-        {name: "fullscreen", action: EasyMDE.toggleFullScreen, className: "fa fa-arrows-alt no-disable", title: "全屏"},
+        { name: "fullscreen", action: EasyMDE.toggleFullScreen, className: "fa fa-arrows-alt no-disable", title: "全屏" },
         "|",
         {
           name: "guide",
@@ -124,12 +124,12 @@ onMounted(() => {
 
 // 监听 modelValue 变化并同步到 EasyMDE
 watch(
-    () => props.modelValue,
-    (newValue) => {
-      if (easyMDE && newValue !== easyMDE.value()) {
-        easyMDE.value(newValue);
-      }
+  () => props.modelValue,
+  (newValue) => {
+    if (easyMDE && newValue !== easyMDE.value()) {
+      easyMDE.value(newValue);
     }
+  }
 );
 
 // 组件卸载前清理 EasyMDE

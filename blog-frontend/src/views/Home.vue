@@ -3,27 +3,18 @@
     <div class="left">
       <div>
         <div v-for="(tag, index) in tags" :key="index" class="tag-item1">
-          <el-check-tag
-              :label="tag.name"
-              :type="getTagType(tag.name)"
-              :checked="selectedTags.includes(tag.name)"
-              @change="handleTagClick(tag.name)"
-          >
+          <el-check-tag :label="tag.name" :type="getTagType(tag.name)" :checked="selectedTags.includes(tag.name)"
+            @change="handleTagClick(tag.name)">
             #{{ tag.name }}
           </el-check-tag>
         </div>
       </div>
     </div>
     <div class="center">
-      <el-input
-          v-model="searchInput"
-          style="width: 100%; margin-bottom: 10px"
-          size="large"
-          placeholder="请输入搜索内容"
-          @keyup.enter.native="() => loadPosts(true)"
-      >
+      <el-input v-model="searchInput" style="width: 100%; margin-bottom: 10px" size="large" placeholder="请输入搜索内容"
+        @keyup.enter.native="() => loadPosts(true)">
         <template #suffix>
-          <el-icon  @click="() => loadPosts(true)" style="cursor: pointer;">
+          <el-icon @click="() => loadPosts(true)" style="cursor: pointer;">
             <Search />
           </el-icon>
         </template>
@@ -31,8 +22,7 @@
       <template v-if="posts.length">
         <div v-for="post in posts" :key="post.id" class="post-card" @click="goToPostDetail(post.id)">
           <div class="post-top">
-            <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像"
-                 class="post-avatar"/>
+            <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像" class="post-avatar" />
             <div>
               <div class="post-author">{{ post.author }}</div>
               <div class="post-time">{{ formatDate(post.createdAt) }}</div>
@@ -41,13 +31,8 @@
           <div class="post-content">
             <div class="post-title">{{ post.title }}</div>
             <div class="post-tag">
-              <el-tag
-                  v-for="(tag, index) in post.tags"
-                  :key="index"
-                  :type="getTagType(tag)"
-                  type="info"
-                  class="tag-item"
-              >
+              <el-tag v-for="(tag, index) in post.tags" :key="index" :type="getTagType(tag)" type="info"
+                class="tag-item">
                 #{{ tag }}
               </el-tag>
             </div>
@@ -55,14 +40,13 @@
               <div style="display: flex; gap: 20px; align-items: center;">
                 <div @click.stop="handleLike(post)" class="flex-center">
                   <Icon icon="ic:sharp-favorite" width="17px" height="17px"
-                        :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1"
-                        stroke="#000"/>
+                    :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1" stroke="#000" />
                   {{ post.likeCount }}
                   喜欢
                 </div>
                 <div class="flex-center">
                   <Icon icon="gravity-ui:comment-fill" width="16px" height="16px" style="color: #fff" stroke-width="0.7"
-                        stroke="#000"/>
+                    stroke="#000" />
                   {{ post.commentCount }}
                   评论
                 </div>
@@ -70,8 +54,7 @@
               <div @click.stop="handleFavorite(post)" class="flex-center">
                 <!--              {{ post.favoriteCount }}-->
                 <Icon icon="fontisto:favorite" width="16px" height="16px"
-                      :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
-                      stroke="#000"/>
+                  :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1" stroke="#000" />
               </div>
             </div>
           </div>
@@ -88,14 +71,14 @@
     <div class="right">
       <div class="right-container">
         <h3 style="padding-left: 20px">热门讨论</h3>
-        <el-divider/>
+        <el-divider />
         <div v-if="hotPosts.length">
           <div v-for="post in hotPosts" :key="post.id">
             <div class="info" @click="goToPostDetailFromHot(post.id)">
               <div class="title">{{ post.title }}</div>
               <div class="count">{{ post.commentCount }} 评论</div>
             </div>
-            <el-divider/>
+            <el-divider />
           </div>
         </div>
         <div v-else class="empty-tip">暂无热门讨论</div>
@@ -105,14 +88,14 @@
 </template>
 
 <script setup>
-import {ref, onMounted, onUnmounted, nextTick} from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { Search } from '@element-plus/icons-vue'
-import {useRouter} from 'vue-router';
-import {usePostStore} from '@/store/index';
+import { useRouter } from 'vue-router';
+import { usePostStore } from '@/store/index';
 import Avatar from '@/assets/avatar/avatar.png'
 import * as BlogApi from '@/api';
-import {eventBus} from '@/utils/eventBus';
-import {useTagColor} from '@/composables/useTagColor';
+import { eventBus } from '@/utils/eventBus';
+import { useTagColor } from '@/composables/useTagColor';
 
 const store = usePostStore();
 const hotPosts = ref([]);
@@ -130,7 +113,7 @@ const searchInput = ref('')
 let observer = null;
 let timeoutId = null;  // 延迟加载的计时器
 const DELAY = 300;     // 延迟时间（毫秒）
-const {getTagType} = useTagColor();
+const { getTagType } = useTagColor();
 
 // 跳转到文章详情页
 const goToPostDetail = (postId) => {
@@ -176,24 +159,24 @@ const initObserver = () => {
   if (!observerTarget.value) return;
 
   observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
+    (entries) => {
+      const [entry] = entries;
 
-        if (entry.isIntersecting && hasMore.value && !loading.value) {
-          // 延迟触发加载
-          if (timeoutId) {
-            clearTimeout(timeoutId);  // 清除之前的计时器
-          }
-          timeoutId = setTimeout(() => {
-            loadPosts();
-          }, DELAY);
+      if (entry.isIntersecting && hasMore.value && !loading.value) {
+        // 延迟触发加载
+        if (timeoutId) {
+          clearTimeout(timeoutId);  // 清除之前的计时器
         }
-      },
-      {
-        root: null,          // 视口为根
-        rootMargin: '0px',   // 没有提前加载
-        threshold: 1.0        // 完全可见时加载
+        timeoutId = setTimeout(() => {
+          loadPosts();
+        }, DELAY);
       }
+    },
+    {
+      root: null,          // 视口为根
+      rootMargin: '0px',   // 没有提前加载
+      threshold: 1.0        // 完全可见时加载
+    }
   );
 
   observer.observe(observerTarget.value);
@@ -350,10 +333,10 @@ const formatDate = (date) => {
 
 .center {
   flex: 3;
-  :deep(.el-input__wrapper){
+
+  :deep(.el-input__wrapper) {
     border-radius: 8px;
     box-shadow: none;
-
   }
 }
 
@@ -444,7 +427,7 @@ const formatDate = (date) => {
   text-align: center;
   color: #999;
   font-size: 14px;
-  margin-top: 40px;
+  padding: 40px;
 }
 
 .loading,

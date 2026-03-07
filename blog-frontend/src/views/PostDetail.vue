@@ -6,28 +6,26 @@
           <div @click="handleLike(post)" class="flex-center">
             <div>
               <Icon icon="ic:sharp-favorite" width="24px" height="24px"
-                    :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1"
-                    stroke="#000"/>
+                :style="{ color: post.userLiked ? 'red' : '#fff' }" stroke-width="1" stroke="#000" />
             </div>
             <div>{{ post.likeCount }}</div>
           </div>
           <div @click="scrollToCommentInput" class="flex-center">
             <div>
               <Icon icon="gravity-ui:comment-fill" width="23px" height="23px" style="color: #fff" stroke-width="0.7"
-                    stroke="#000"/>
+                stroke="#000" />
             </div>
             <div>{{ post.commentCount }}</div>
           </div>
           <div @click="handleFavorite(post)" class="flex-center">
             <div>
               <Icon icon="fontisto:favorite" width="23px" height="23px"
-                    :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1"
-                    stroke="#000"/>
+                :style="{ color: post.userFavorited ? 'black' : '#fff' }" stroke-width="1" stroke="#000" />
             </div>
             <div>{{ post.favoriteCount }}</div>
           </div>
           <div @click="copyLink" class="flex-center">
-            <Icon icon="tdesign:share" width="23px" height="23px"/>
+            <Icon icon="tdesign:share" width="23px" height="23px" />
           </div>
         </div>
       </el-affix>
@@ -36,7 +34,7 @@
       <div class="main-content" v-if="post">
         <div class="post-top">
           <img :src="post.avatar ? 'http://localhost:5000' + post.avatar : Avatar" alt="用户头像"
-               @click="toUserProfile(post.userId)" class="post-avatar"/>
+            @click="toUserProfile(post.userId)" class="post-avatar" />
           <div>
             <div class="post-author">{{ post.username }}</div>
             <div class="post-time">{{ formatDate(post.createdAt) }}</div>
@@ -44,13 +42,7 @@
         </div>
         <h1>{{ post.title }}</h1>
         <div class="post-tag">
-          <el-tag
-              v-for="(tag, index) in post.tags"
-              :key="index"
-              :type="getTagType(tag)"
-              type="info"
-              class="tag-item"
-          >
+          <el-tag v-for="(tag, index) in post.tags" :key="index" :type="getTagType(tag)" type="info" class="tag-item">
             #{{ tag }}
           </el-tag>
         </div>
@@ -62,8 +54,7 @@
 
         <!-- 发表评论 -->
         <div class="comment-form">
-          <textarea ref="commentInputRef" v-model="newComment" placeholder="发表你的评论..."
-                    class="comment-input"></textarea>
+          <textarea ref="commentInputRef" v-model="newComment" placeholder="发表你的评论..." class="comment-input"></textarea>
           <div class="comment-btn-container">
             <button @click="submitComment" :disabled="!newComment" class="submit-btn">
               发布评论
@@ -76,7 +67,7 @@
           <div v-for="comment in comments" :id="'comment-' + comment.id" :key="comment.id" class="comment-item">
             <div class="comment-top">
               <img :src="comment.avatar ? 'http://localhost:5000' + comment.avatar : Avatar" alt="用户头像"
-                   class="comment-avatar"/>
+                class="comment-avatar" />
               <div class="comment-info">
                 <div style="border: 1px solid #f0f0f0; border-radius: 8px;padding: 10px;">
                   <div class="comment-detail">
@@ -86,7 +77,7 @@
                     <!-- 删除评论 -->
                     <div class="dropdown-container" v-if="canDelete(comment)" @click.stop="toggleDropdown(comment.id)">
                       <div class="menu-icon" :class="{ 'menu-hover': dropdownId === comment.id }">
-                        <Icon icon="codicon:ellipsis" width="16" height="16"/>
+                        <Icon icon="codicon:ellipsis" width="16" height="16" />
                       </div>
                       <!-- 下拉框 -->
                       <div v-if="dropdownId === comment.id" class="dropdown-menu">
@@ -98,12 +89,8 @@
                   <div style="display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex;gap: 20px;">
                       <div class="comment-upvote" @click="handleCommentLike(comment.id)">
-                        <Icon
-                            icon="material-symbols:thumb-up-rounded"
-                            width="16px"
-                            height="16px"
-                            :style="{ color: comment.liked ? '#409EFF' : '#888' }"
-                        />
+                        <Icon icon="material-symbols:thumb-up-rounded" width="16px" height="16px"
+                          :style="{ color: comment.liked ? '#409EFF' : '#888' }" />
                         <span style="margin-left: 6px;">{{ comment.likeCount }}</span>
                       </div>
                       <div class="comment-reply" @click="toggleReply(comment.id)">回复</div>
@@ -122,23 +109,23 @@
                 <!-- 回复评论显示 -->
                 <div v-if="comment.replies && comment.replies.length">
                   <div v-for="reply in comment.replies" :id="'comment-' + reply.id" :key="reply.id"
-                       class="comment-item">
+                    class="comment-item">
                     <div class="comment-top">
                       <img :src="reply.avatar ? 'http://localhost:5000' + reply.avatar : Avatar" alt="用户头像"
-                           class="comment-avatar"/>
+                        class="comment-avatar" />
                       <div class="comment-info">
                         <div style="border: 1px solid #f0f0f0; border-radius: 8px;padding: 10px;">
                           <div class="comment-detail">
                             <div class="comment-author">
                               {{ reply.username }}
                               <span v-if="reply.replyToUsername">回复 {{
-                                  reply.replyToUsername
-                                }}</span>
+                                reply.replyToUsername
+                              }}</span>
                             </div>
                             <div class="dropdown-container" v-if="canDelete(reply)"
-                                 @click.stop="toggleDropdown(reply.id)">
+                              @click.stop="toggleDropdown(reply.id)">
                               <div class="menu-icon" :class="{ 'menu-hover': dropdownId === reply.id }">
-                                <Icon icon="codicon:ellipsis" width="16" height="16"/>
+                                <Icon icon="codicon:ellipsis" width="16" height="16" />
                               </div>
                               <!-- 下拉框 -->
                               <div v-if="dropdownId === reply.id" class="dropdown-menu">
@@ -150,12 +137,8 @@
                           <div style="display: flex; align-items: center; justify-content: space-between;">
                             <div style="display: flex;gap: 20px;">
                               <div class="comment-upvote" @click="handleCommentLike(reply.id)">
-                                <Icon
-                                    icon="material-symbols:thumb-up-rounded"
-                                    width="16px"
-                                    height="16px"
-                                    :style="{ color: reply.liked ? '#409EFF' : '#888' }"
-                                />
+                                <Icon icon="material-symbols:thumb-up-rounded" width="16px" height="16px"
+                                  :style="{ color: reply.liked ? '#409EFF' : '#888' }" />
                                 <span style="margin-left: 6px;">{{ reply.likeCount }}</span>
                               </div>
                               <div class="comment-reply" @click="toggleReply(reply.id, reply.username)">回复</div>
@@ -164,11 +147,10 @@
                           </div>
                         </div>
                         <div v-if="replyingCommentId[reply.id]" class="comment-form">
-                          <textarea v-model="replyComment" placeholder="输入你的回复..."
-                                    class="comment-input"></textarea>
+                          <textarea v-model="replyComment" placeholder="输入你的回复..." class="comment-input"></textarea>
                           <div class="comment-btn-container">
                             <button @click="submitReply(comment.id, reply.username)" :disabled="!replyComment"
-                                    class="submit-btn">
+                              class="submit-btn">
                               发布评论
                             </button>
                           </div>
@@ -192,12 +174,8 @@
         <!-- 内容区域 -->
         <div class="author-card-content">
           <div class="author-header">
-            <img
-                :src="userInfo.avatar ? 'http://localhost:5000' + userInfo.avatar : Avatar"
-                alt="用户头像"
-                class="author-avatar"
-                @click="toUserProfile(userInfo.id)"
-            />
+            <img :src="userInfo.avatar ? 'http://localhost:5000' + userInfo.avatar : Avatar" alt="用户头像"
+              class="author-avatar" @click="toUserProfile(userInfo.id)" />
             <div class="author-info">
               <div class="author-name">{{ userInfo.username }}</div>
               <div class="author-location">{{ userInfo.location || '暂未填写地址' }}</div>
@@ -208,11 +186,11 @@
           </div>
           <div class="author-extra">
             <div class="author-extra-item">
-              <Icon icon="iconoir:birthday-cake" class="author-extra-icon"/>
+              <Icon icon="iconoir:birthday-cake" class="author-extra-icon" />
               <span class="author-extra-label">生日：</span>{{ formatDate(userInfo.birthday) }}
             </div>
             <div class="author-extra-item">
-              <Icon icon="fluent:person-clock-24-regular" class="author-extra-icon"/>
+              <Icon icon="fluent:person-clock-24-regular" class="author-extra-icon" />
               <span class="author-extra-label">加入时间：</span>{{ formatDate(userInfo.createdAt) }}
             </div>
           </div>
@@ -220,23 +198,18 @@
       </div>
       <div v-if="authorPosts.length > 0 && userInfo" class="author-posts">
         <h3 style="padding-left: 20px">{{ userInfo.username }} 的更多文章</h3>
-        <el-divider/>
+        <el-divider />
         <div v-for="post in authorPosts" :key="post.id">
           <div class="info" @click="goToPostDetail(post.id)">
             <div class="title">{{ post.title }}</div>
             <div class="post-tag">
-              <el-tag
-                  v-for="(tag, index) in post.Tags"
-                  :key="index"
-                  :type="getTagType(tag.name)"
-                  type="info"
-                  class="tag-item"
-              >
+              <el-tag v-for="(tag, index) in post.Tags" :key="index" :type="getTagType(tag.name)" type="info"
+                class="tag-item">
                 #{{ tag.name }}
               </el-tag>
             </div>
           </div>
-          <el-divider/>
+          <el-divider />
         </div>
       </div>
     </div>
@@ -244,16 +217,16 @@
 </template>
 
 <script setup>
-import {ref, onMounted, computed, nextTick, watch} from "vue";
-import {useRoute, useRouter} from "vue-router";
+import { ref, onMounted, computed, nextTick, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import * as BlogApi from "@/api";
-import {marked} from "marked";
+import { marked } from "marked";
 import DOMPurify from "dompurify";
 import Avatar from "@/assets/avatar/avatar.png";
-import {ElMessageBox, ElMessage} from "element-plus";
+import { ElMessageBox, ElMessage } from "element-plus";
 import hljs from 'highlight.js';
 import 'highlight.js/styles/github-dark.css';
-import {useTagColor} from '@/composables/useTagColor';
+import { useTagColor } from '@/composables/useTagColor';
 
 const router = useRouter()
 const route = useRoute();
@@ -267,7 +240,7 @@ const commentInputRef = ref(null);
 const userInfo = ref(null)
 const authorPosts = ref([])
 
-const {getTagType} = useTagColor();
+const { getTagType } = useTagColor();
 
 const fetchUserInfo = async (userId) => {
   try {
@@ -299,7 +272,7 @@ const toggleReply = (commentId) => {
     replyingCommentId.value = {};  // 关闭所有输入框
     replyComment.value = "";
   } else {
-    replyingCommentId.value = {[commentId]: true};  // 只展开当前的输入框
+    replyingCommentId.value = { [commentId]: true };  // 只展开当前的输入框
     replyComment.value = "";
   }
 };
@@ -331,7 +304,7 @@ const canDelete = (comment) => {
 marked.setOptions({
   highlight(code, lang) {
     if (lang && hljs.getLanguage(lang)) {
-      return hljs.highlight(code, {language: lang}).value;
+      return hljs.highlight(code, { language: lang }).value;
     }
     return hljs.highlightAuto(code).value;
   }
@@ -416,10 +389,10 @@ const submitReply = async (commentId, replyToUsername = null) => {
 
   try {
     const res = await BlogApi.createComment(
-        post.value.id,
-        replyComment.value,
-        commentId,  // 被回复的评论ID
-        replyToUsername  // 被回复的用户名
+      post.value.id,
+      replyComment.value,
+      commentId,  // 被回复的评论ID
+      replyToUsername  // 被回复的用户名
     );
 
     if (res.code === 0) {
@@ -558,7 +531,7 @@ const scrollToHash = () => {
     const targetId = hash.substring(1);
     const el = document.getElementById(targetId);
     if (el) {
-      el.scrollIntoView({behavior: 'smooth', block: 'center'});
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }
 };
@@ -736,11 +709,13 @@ const formatDate = (date) => {
       }
     }
   }
-  :deep(.el-tag .el-tag__content){
+
+  :deep(.el-tag .el-tag__content) {
     max-width: 295px;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   :deep(.el-divider--horizontal) {
     margin: 16px 0;
     border-top: 1.4px #f6f6f6 solid;
@@ -1075,6 +1050,7 @@ const formatDate = (date) => {
     color: #aaa;
   }
 }
+
 /* 基础文本样式 */
 :deep(.markdown-body) {
   line-height: 1.8;

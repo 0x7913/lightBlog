@@ -13,7 +13,9 @@ const router = express.Router();
 
 // 生成 JWT Token
 const generateToken = (user) => {
-  return jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
 };
 
 const getEmailService = (email) => {
@@ -29,12 +31,12 @@ router.post("/send-code", async (req, res) => {
   const { email } = req.body;
 
   try {
-     // 生成 6 位数验证码
+    // 生成 6 位数验证码
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
- // 存储验证码
+    // 存储验证码
     await VerificationCode.create({ email, code, expiresAt });
-// 配置邮件发送
+    // 配置邮件发送
     const emailService = getEmailService(email);
     if (!emailService) {
       return res.json({ code: 400, data: null, msg: "暂不支持该邮箱服务" });
@@ -44,35 +46,35 @@ router.post("/send-code", async (req, res) => {
     let fromAddress;
     // 根据不同的邮箱服务商配置邮件发送
     switch (emailService) {
-      case 'qq':
+      case "qq":
         transporter = nodemailer.createTransport({
-          service: 'qq',
+          service: "qq",
           auth: {
             user: process.env.QQ_EMAIL_USER,
             pass: process.env.QQ_EMAIL_PASS,
           },
         });
-        fromAddress = process.env.QQ_EMAIL_USER
+        fromAddress = process.env.QQ_EMAIL_USER;
         break;
-      case 'gmail':
+      case "gmail":
         transporter = nodemailer.createTransport({
-          service: 'gmail',
+          service: "gmail",
           auth: {
             user: process.env.GMAIL_EMAIL_USER,
             pass: process.env.GMAIL_EMAIL_PASS,
           },
         });
-        fromAddress = process.env.GMAIL_EMAIL_USER
+        fromAddress = process.env.GMAIL_EMAIL_USER;
         break;
-      case '163':
+      case "163":
         transporter = nodemailer.createTransport({
-          service: '163',
+          service: "163",
           auth: {
             user: process.env.EMAIL_163_USER,
             pass: process.env.EMAIL_163_PASS,
           },
         });
-        fromAddress = process.env.EMAIL_163_USER
+        fromAddress = process.env.EMAIL_163_USER;
         break;
       // case 'hotmail':
       //   transporter = nodemailer.createTransport({
@@ -87,7 +89,6 @@ router.post("/send-code", async (req, res) => {
       default:
         return res.json({ code: 400, data: null, msg: "暂不支持该邮箱服务" });
     }
-
 
     const mailOptions = {
       from: fromAddress,
@@ -124,17 +125,28 @@ router.post("/register", async (req, res) => {
       return res.json({ code: 400, data: null, msg: "验证码无效或已过期" });
     }
 
-    const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
+    const existingUser = await User.findOne({
+      where: { [Op.or]: [{ username }, { email }] },
+    });
     if (existingUser) {
       return res.json({ code: 409, data: null, msg: "用户名或邮箱已被注册" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ username, email, password: hashedPassword, isVerified: true });
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      isVerified: true,
+    });
 
     await validCode.destroy();
 
-    res.json({ code: 0, data: { token: generateToken(newUser) }, msg: "注册成功" });
+    res.json({
+      code: 0,
+      data: { token: generateToken(newUser) },
+      msg: "注册成功",
+    });
   } catch (error) {
     res.json({ code: 500, data: null, msg: "服务器错误" });
   }
@@ -150,7 +162,11 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.json({ code: 400, data: null, msg: "密码错误" });
 
-    res.json({ code: 0, data: { token: generateToken(user) }, msg: "登录成功" });
+    res.json({
+      code: 0,
+      data: { token: generateToken(user) },
+      msg: "登录成功",
+    });
   } catch (error) {
     res.json({ code: 500, data: null, msg: "服务器错误" });
   }
@@ -172,8 +188,8 @@ router.get("/me", authMiddleware, async (req, res) => {
         "birthday",
         "bio",
         "location",
-        "createdAt"
-      ]
+        "createdAt",
+      ],
     });
 
     if (!user) return res.json({ code: 404, data: null, msg: "用户不存在" });
@@ -185,7 +201,7 @@ router.get("/me", authMiddleware, async (req, res) => {
 });
 
 // 通过用户 ID 获取用户信息（无需登录）
-router.get("/user/userInfo-:id", optional, async (req, res) => {
+router.get("/user/userInfo/:id", optional, async (req, res) => {
   try {
     const userId = req.params.id;
     if (!userId) {
@@ -200,8 +216,8 @@ router.get("/user/userInfo-:id", optional, async (req, res) => {
         "birthday",
         "bio",
         "location",
-        "createdAt"
-      ]
+        "createdAt",
+      ],
     });
 
     if (!user) {
@@ -218,30 +234,35 @@ router.get("/user/userInfo-:id", optional, async (req, res) => {
 // 配置 Multer 存储头像
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-      cb(null, "uploads/avatars/"); // 存放头像
+    cb(null, "uploads/avatars/"); // 存放头像
   },
   filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname); // 获取后缀名
-      const uniqueName = uuidv4() + ext; // 生成唯一文件名
-      cb(null, uniqueName);
-  }
+    const ext = path.extname(file.originalname); // 获取后缀名
+    const uniqueName = uuidv4() + ext; // 生成唯一文件名
+    cb(null, uniqueName);
+  },
 });
 
 const upload = multer({ storage });
 
 //头像上传 API
-router.post("/upload-avatar", authMiddleware, upload.single("avatar"), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.json({ code: 400, data: null, msg: "请上传头像文件" });
-    }
+router.post(
+  "/upload-avatar",
+  authMiddleware,
+  upload.single("avatar"),
+  (req, res) => {
+    try {
+      if (!req.file) {
+        return res.json({ code: 400, data: null, msg: "请上传头像文件" });
+      }
 
-    const avatarPath = `/uploads/avatars/${req.file.filename}`;
-    res.json({ code: 0, data: { avatar: avatarPath }, msg: "" });
-  } catch (error) {
-    res.json({ code: 500, data: null, msg: "服务器错误" });
-  }
-});
+      const avatarPath = `/uploads/avatars/${req.file.filename}`;
+      res.json({ code: 0, data: { avatar: avatarPath }, msg: "" });
+    } catch (error) {
+      res.json({ code: 500, data: null, msg: "服务器错误" });
+    }
+  },
+);
 //更新用户信息 API（前端传入 avatar URL）
 router.put("/update-profile", authMiddleware, async (req, res) => {
   try {
@@ -271,33 +292,33 @@ router.put("/update-profile", authMiddleware, async (req, res) => {
 });
 
 // routes/auth.js
-router.post('/update-password', authMiddleware, async (req, res) => {
+router.post("/update-password", authMiddleware, async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const userId = req.user.id; // 从 authMiddleware 中获取用户 ID
 
   if (!oldPassword || !newPassword) {
-    return res.status(400).json({ code: 400, msg: '缺少必要参数' });
+    return res.status(400).json({ code: 400, msg: "缺少必要参数" });
   }
 
   try {
     const user = await User.findByPk(userId);
     if (!user) {
-      return res.status(404).json({ code: 404, msg: '用户不存在' });
+      return res.status(404).json({ code: 404, msg: "用户不存在" });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
-      return res.status(401).json({ code: 401, msg: '原密码不正确' });
+      return res.status(401).json({ code: 401, msg: "原密码不正确" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
 
-    res.json({ code: 0, msg: '密码修改成功' });
+    res.json({ code: 0, msg: "密码修改成功" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ code: 500, msg: '服务器内部错误' });
+    res.status(500).json({ code: 500, msg: "服务器内部错误" });
   }
 });
 

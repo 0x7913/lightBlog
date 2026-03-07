@@ -1,67 +1,38 @@
 <template>
   <div class="container3">
-    <el-input
-        style="width: 100%"
-        v-model="title"
-        placeholder="请输入文章标题...(5~100)"
-        class="title-input"
-        :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }"
-    >
+    <el-input style="width: 100%" v-model="title" placeholder="请输入文章标题...(5~100)" class="title-input"
+      :input-style="{ fontSize: '22px', fontWeight: 'bold', color: '#333' }">
       <template #append>
         <div @click="handleSubmit" style="font-size: 14px; font-weight: 500; cursor: pointer;">
           {{ isEditMode ? '提交修改' : '发布文章' }}
         </div>
       </template>
     </el-input>
-    <el-select
-        v-model="selectedTags"
-        multiple
-        :multiple-limit="5"
-        filterable
-        remote
-        allow-create
-        default-first-option
-        :reserve-keyword="true"
-        :remote-method="searchTags"
-        :loading="loading"
-        placeholder="请输入或选择标签（最多5个，非必选）"
-        @change="handleTagChange"
-        style="width: 100%; margin-bottom: 16px;"
-        class="hash-tags"
-    >
+    <el-select v-model="selectedTags" multiple :multiple-limit="5" filterable remote allow-create default-first-option
+      :reserve-keyword="true" :remote-method="searchTags" :loading="loading" placeholder="请输入或选择标签（最多5个，非必选）"
+      @change="handleTagChange" style="width: 100%; margin-bottom: 16px;" class="hash-tags">
       <!-- 用自定义 tag 替换默认展示 -->
       <template #tag>
-        <el-tag
-            v-for="(tag, index) in selectedTags"
-            :key="tag"
-            :type="getTagType(tag)"
-            closable
-            @close="handleTagClose(index)"
-            disable-transitions
-        >
+        <el-tag v-for="(tag, index) in selectedTags" :key="tag" :type="getTagType(tag)" closable
+          @close="handleTagClose(index)" disable-transitions>
           #{{ tag }}
         </el-tag>
       </template>
 
       <!-- 下拉选项 -->
-      <el-option
-          v-for="item in tagOptions"
-          :key="item.name"
-          :label="item.name"
-          :value="item.name"
-      />
+      <el-option v-for="item in tagOptions" :key="item.name" :label="item.name" :value="item.name" />
     </el-select>
-    <MarkdownEditor v-if="content !== null" v-model="content"/>
+    <MarkdownEditor v-if="content !== null" v-model="content" />
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted} from "vue";
-import {useRoute, useRouter} from "vue-router";
-import {ElMessage} from "element-plus";
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import * as BlogApi from "@/api";
-import {useTagColor} from '@/composables/useTagColor';
+import { useTagColor } from '@/composables/useTagColor';
 
 const title = ref("");
 const content = ref(null);
@@ -74,7 +45,7 @@ const postId = ref(null);
 const selectedTags = ref([]);
 const tagOptions = ref([]);
 const loading = ref(false);
-const {getTagType} = useTagColor();
+const { getTagType } = useTagColor();
 
 const handleTagClose = (index) => {
   selectedTags.value.splice(index, 1);
@@ -122,7 +93,7 @@ onMounted(async () => {
         if (res.data.tags && Array.isArray(res.data.tags)) {
           selectedTags.value = res.data.tags;
           // 如果需要同时更新可选项列表以避免“输入已存在项”提示：
-          tagOptions.value = [...new Set([...tagOptions.value.map(t => t.name), ...res.data.tags])].map(name => ({name}));
+          tagOptions.value = [...new Set([...tagOptions.value.map(t => t.name), ...res.data.tags])].map(name => ({ name }));
         }
       } else {
         ElMessage.error("加载文章失败！");
@@ -204,7 +175,8 @@ const handleSubmit = async () => {
   padding: 10px;
 
   input {
-    caret-color: black; /* 仍显示光标 */
+    caret-color: black;
+    /* 仍显示光标 */
   }
 }
 </style>

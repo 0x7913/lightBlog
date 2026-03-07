@@ -1,4 +1,7 @@
-#项目大致结构如下:  
+
+# lightBlog
+
+项目大致结构如下:
 📂 blog-frontend   #前端代码  
 │   📂 node_modules  
 │   📂 src  
@@ -23,7 +26,7 @@
 │   │   📂 store  
 │   │   └── index.js        #状态管理  
 │   │   📂 utils  
-│   │   └── eventBus.js          
+│   │   └── eventBus.js  
 │   │   App.vue  
 │   │   main.js  
 │   index.html  
@@ -57,15 +60,13 @@
 │   server.js          # 入口文件  
 │   package.json       # 依赖管理  
 
-
-#后端api接口
+后端api接口  
 POST /api/auth/send-code —— 发送邮箱验证码
 POST /api/auth/register —— 注册用户
 POST /api/auth/login —— 用户登录
 GET /api/auth/me —— 获取当前用户信息（需要登录）
 
-
-#运行命令  
+运行命令  
 cd blog-system  
 npm install  
 node server.js
@@ -73,23 +74,3 @@ node server.js
 cd blog-frontend  
 npm install  
 npm run dev  
-
-#方案  
-判断 localStorage 里是否有 token：
-有 token：自动获取用户信息，显示“已登录”状态。
-无 token：显示“登录 / 注册”按钮。
-在评论、发布文章时检查登录：
-如果 token 为空，弹出提示框要求登录。
-如果 token 存在，正常提交数据。
-
-现在还有个人资料，标签功能，管理文章功能，搜索功能
-个人资料分为上下两部分，上面是头像，用户名，简介等
-下方分为左右两部分，左边为目录，显示我的文章，点赞，收藏，最近评论等
-右边就显示对应目录的内容，点击可以进入到详情页，
-个人资料中可以添加个人简介，默认显示暂无简介
-需要修改可以点击编辑跳转到设置中修改
-
-3主页中的积极讨论
-2标签功能
-4个人页面的列表布局是否需要更改
-1评论的点赞功能

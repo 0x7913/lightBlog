@@ -162,13 +162,13 @@ const openRegister = () => {
 // 发送验证码
 const sendVerificationCode = async () => {
     // 单独验证邮箱字段
-    registerFormRef.value.validateField('email', async (errorMessage:any) => {
+    registerFormRef.value.validateField('email', async (errorMessage: any) => {
         if (!errorMessage) return
         try {
-            const res =await BlogApi.sendCode(registerForm.value.email);
+            const res: any = await BlogApi.sendCode(registerForm.value.email);
             if (res.code !== 0) {
-              ElMessage.error(res.msg || "发送失败");
-              return;
+                ElMessage.error(res.msg || "发送失败");
+                return;
             }
             ElMessage.success("验证码已发送，请查收邮箱");
             // 启动倒计时
@@ -181,51 +181,51 @@ const sendVerificationCode = async () => {
                 }
             }, 1000);
         } catch (error) {
-          const msg = error.response?.data?.msg || "验证码发送失败"
-          ElMessage.error(msg);
+            const msg = error.response?.data?.msg || "验证码发送失败"
+            ElMessage.error(msg);
         }
     });
 };
 
 // 处理登录，先验证表单数据
 const handleLogin = () => {
-  loginFormRef.value.validate(async (valid:any) => {
-    if (!valid) return;
-    try {
-      const res = await BlogApi.login(loginForm.value);
-      if (res.code !== 0) {
-        ElMessage.error(res.msg || "登录失败");
-        return;
-      }
-      localStorage.setItem("token", res.data.token);
-      ElMessage.success("登录成功");
-      await fetchUserInfo();
-      eventBus.emit('refresh-posts');
-      showLogin.value = false;
-    } catch (error) {
-      const msg = error.response?.data?.msg || "登录失败，请检查网络";
-      ElMessage.error(msg);
-    }
-  });
+    loginFormRef.value.validate(async (valid: any) => {
+        if (!valid) return;
+        try {
+            const res: any = await BlogApi.login(loginForm.value);
+            if (res.code !== 0) {
+                ElMessage.error(res.msg || "登录失败");
+                return;
+            }
+            localStorage.setItem("token", res.data.token);
+            ElMessage.success("登录成功");
+            await fetchUserInfo();
+            eventBus.emit('refresh-posts');
+            showLogin.value = false;
+        } catch (error) {
+            const msg = error.response?.data?.msg || "登录失败，请检查网络";
+            ElMessage.error(msg);
+        }
+    });
 };
 // 处理注册，先验证表单数据
 const handleRegister = () => {
-  registerFormRef.value.validate(async (valid:any) => {
-    if (!valid) return;
-    try {
-      const res = await BlogApi.register(registerForm.value);
-      if (res.code !== 0) {
-        ElMessage.error(res.msg || "注册失败");
-        return;
-      }
-      ElMessage.success("注册成功，请登录");
-      showRegister.value = false;
-      showLogin.value = true;
-    } catch (error) {
-      const msg = error.response?.data?.msg || "注册失败，请检查网络";
-      ElMessage.error(msg);
-    }
-  });
+    registerFormRef.value.validate(async (valid: any) => {
+        if (!valid) return;
+        try {
+            const res: any = await BlogApi.register(registerForm.value);
+            if (res.code !== 0) {
+                ElMessage.error(res.msg || "注册失败");
+                return;
+            }
+            ElMessage.success("注册成功，请登录");
+            showRegister.value = false;
+            showLogin.value = true;
+        } catch (error) {
+            const msg = error.response?.data?.msg || "注册失败，请检查网络";
+            ElMessage.error(msg);
+        }
+    });
 };
 const fetchUserInfo = async () => {
     try {
@@ -237,7 +237,7 @@ const fetchUserInfo = async () => {
     }
 };
 
-const handleCommand = (command:any) => {
+const handleCommand = (command: any) => {
     switch (command) {
         case "logout":
             logout();
@@ -272,7 +272,7 @@ const logout = () => {
     router.push("/");
 }
 
-const updateUserInfo = (newUserInfo:any) => {
+const updateUserInfo = (newUserInfo: any) => {
     userInfo.value = newUserInfo;
 };
 // 页面加载时检查是否有用户信息
@@ -317,9 +317,11 @@ onUnmounted(() => {
             cursor: pointer;
         }
     }
-    .header-center{
-      flex: 6.1;
+
+    .header-center {
+        flex: 6.1;
     }
+
     .sign {
         flex: 0.9;
         display: flex;

@@ -16,43 +16,27 @@
 
           <el-form ref="formRef" :model="formData" :rules="rules" label-width="80px">
             <el-form-item label="用户名" prop="username">
-              <el-input v-model="formData.username" placeholder="请输入用户名"/>
+              <el-input v-model="formData.username" placeholder="请输入用户名" />
             </el-form-item>
             <el-form-item label="电子邮箱">
-              <el-input v-model="formData.email" disabled/>
+              <el-input v-model="formData.email" disabled />
             </el-form-item>
             <el-form-item label="头像">
-              <el-upload class="avatar-uploader" :show-file-list="false" :http-request="uploadAvatar"
-                         accept="image/*">
-                <img v-if="avatarUrl" :src="avatarUrl" class="avatar" alt=""/>
-                <img v-else :src="Avatar" class="avatar" alt=""/>
+              <el-upload class="avatar-uploader" :show-file-list="false" :http-request="uploadAvatar" accept="image/*">
+                <img v-if="avatarUrl" :src="avatarUrl" class="avatar" alt="" />
+                <img v-else :src="Avatar" class="avatar" alt="" />
               </el-upload>
             </el-form-item>
             <el-form-item label="地址">
-              <el-cascader
-                  :options="pcTextArr"
-                  v-model="formData.selectedOptions"
-                  placeholder="请选择地址"
-              />
+              <el-cascader :options="pcTextArr" v-model="formData.selectedOptions" placeholder="请选择地址" />
             </el-form-item>
             <el-form-item label="生日">
-              <el-date-picker
-                  v-model="formData.birthday"
-                  type="date"
-                  placeholder="选择出生日期"
-                  :disabled-date="disabledDate"
-              />
+              <el-date-picker v-model="formData.birthday" type="date" placeholder="选择出生日期"
+                :disabled-date="disabledDate" />
             </el-form-item>
             <el-form-item label="个人介绍">
-              <el-input
-                  v-model="formData.bio"
-                  type="textarea"
-                  placeholder="请输入个人介绍"
-                  :rows=5
-                  resize="none"
-                  maxlength="200"
-                  :show-word-limit="true"
-              />
+              <el-input v-model="formData.bio" type="textarea" placeholder="请输入个人介绍" :rows=5 resize="none"
+                maxlength="200" :show-word-limit="true" />
             </el-form-item>
           </el-form>
 
@@ -72,16 +56,14 @@
           </template>
           <el-form :model="passwordForm" :rules="passwordRules" ref="passwordRef" label-width="100px">
             <el-form-item label="当前密码" prop="oldPassword">
-              <el-input v-model="passwordForm.oldPassword" placeholder="请输入当前密码" type="password"
-                        autocomplete="off"/>
+              <el-input v-model="passwordForm.oldPassword" placeholder="请输入当前密码" type="password" autocomplete="off" />
             </el-form-item>
             <el-form-item label="新密码" prop="newPassword">
-              <el-input v-model="passwordForm.newPassword" placeholder="请输入新密码" type="password"
-                        autocomplete="off"/>
+              <el-input v-model="passwordForm.newPassword" placeholder="请输入新密码" type="password" autocomplete="off" />
             </el-form-item>
             <el-form-item label="确认密码" prop="confirmPassword">
               <el-input v-model="passwordForm.confirmPassword" placeholder="请再次输入新密码" type="password"
-                        autocomplete="off"/>
+                autocomplete="off" />
             </el-form-item>
           </el-form>
 
@@ -97,12 +79,12 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue';
-import {ElMessage} from 'element-plus';
+import { ref, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
 import * as BlogApi from '@/api';
-import {eventBus} from '@/utils/eventBus';
+import { eventBus } from '@/utils/eventBus';
 import Avatar from '@/assets/avatar/avatar.png';
-import {pcTextArr} from 'element-china-area-data'
+import { pcTextArr } from 'element-china-area-data'
 
 const userInfo = ref(null);
 const avatarUrl = ref('');
@@ -127,13 +109,13 @@ const passwordForm = ref({
 });
 
 const passwordRules = {
-  oldPassword: [{required: true, message: '请输入当前密码', trigger: 'blur'}],
+  oldPassword: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
   newPassword: [
-    {required: true, message: '请输入新密码', trigger: 'blur'},
-    {min: 6, max: 20, message: '密码长度应在6-20之间', trigger: 'blur'}
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度应在6-20之间', trigger: 'blur' }
   ],
   confirmPassword: [
-    {required: true, message: '请确认新密码', trigger: 'blur'},
+    { required: true, message: '请确认新密码', trigger: 'blur' },
     {
       validator: (_, value, callback) => {
         if (value !== passwordForm.value.newPassword) {
@@ -151,7 +133,7 @@ const updatePassword = async () => {
   passwordRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const res = await BlogApi.updatePassword({
+        const res: any = await BlogApi.updatePassword({
           oldPassword: passwordForm.value.oldPassword,
           newPassword: passwordForm.value.newPassword
         });
@@ -171,8 +153,8 @@ const disabledDate = (time: Date) => {
 }
 const rules = {
   username: [
-    {required: true, message: "用户名不能为空", trigger: "blur"},
-    {min: 3, max: 20, message: "用户名长度在 3 到 20 个字符", trigger: "blur"}
+    { required: true, message: "用户名不能为空", trigger: "blur" },
+    { min: 3, max: 20, message: "用户名长度在 3 到 20 个字符", trigger: "blur" }
   ]
 };
 
@@ -186,7 +168,7 @@ const uploadAvatar = async (fileData: { file: File }) => {
     const uploadFormData = new FormData();
     uploadFormData.append("avatar", fileData.file);
 
-    const res = await BlogApi.uploadAvatar(uploadFormData);
+    const res: any = await BlogApi.uploadAvatar(uploadFormData);
 
     if (res && res.code === 0) {
       avatarUrl.value = `${LOCAL_BASE_URL}${res.data.avatar}`;
@@ -205,7 +187,7 @@ const submitForm = async () => {
   formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const res = await BlogApi.updateUserInfo({
+        const res: any = await BlogApi.updateUserInfo({
           username: formData.value.username,
           avatar: formData.value.relativeAvatarUrl, // 提交最新的头像路径
           location: formData.value.selectedOptions.join(' '),
@@ -246,8 +228,8 @@ onMounted(() => {
     formData.value.username = userInfo.value.username;
     formData.value.email = userInfo.value.email;
     formData.value.selectedOptions = userInfo.value.location
-        ? userInfo.value.location.split(' ')
-        : [];
+      ? userInfo.value.location.split(' ')
+      : [];
     formData.value.birthday = userInfo.value.birthday || '';
     formData.value.bio = userInfo.value.bio || '';
     avatarUrl.value = userInfo.value.avatar ? `${LOCAL_BASE_URL}${userInfo.value.avatar}` : '';

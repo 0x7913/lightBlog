@@ -2,7 +2,7 @@
   <div class="container4">
     <div class="profile-card" v-if="userInfo">
       <img :src="userInfo.avatar ? 'http://localhost:5000' + userInfo.avatar : Avatar" alt="用户头像"
-           class="profile-avatar"/>
+        class="profile-avatar" />
       <div class="profile-container">
         <div class="user-info">
           <div class="profile-name">
@@ -10,11 +10,11 @@
           </div>
           <div class="profile-subinfo">
             <div class="flex-center">
-              <Icon icon="mynaui:location" width="16px" height="16px" style="color: #999"/>
+              <Icon icon="mynaui:location" width="16px" height="16px" style="color: #999" />
               <span class="location">{{ userInfo.location || "暂时未填写地址" }}</span>
             </div>
             <div class="flex-center">
-              <Icon icon="iconoir:birthday-cake" width="16px" height="16px" style="color: #999"/>
+              <Icon icon="iconoir:birthday-cake" width="16px" height="16px" style="color: #999" />
               <span>{{ userInfo.birthday || "暂时未设置生日" }}</span>
             </div>
             <div class="flex-center">
@@ -27,19 +27,14 @@
           </div>
         </div>
         <div class="profile-edit">
-          <Icon icon="basil:edit-outline" v-if="!route.params.id" @click="toEdit" class="edit-icon"/>
+          <Icon icon="basil:edit-outline" v-if="!route.params.id" @click="toEdit" class="edit-icon" />
         </div>
       </div>
     </div>
     <div class="profile-info">
       <div class="menu-wrapper">
-        <el-menu
-            v-model="activeMenu"
-            class="setting-menu"
-            mode="vertical"
-            @select="handleSelect"
-            default-active="posts"
-        >
+        <el-menu v-model="activeMenu" class="setting-menu" mode="vertical" @select="handleSelect"
+          default-active="posts">
           <el-menu-item index="posts">已发布文章</el-menu-item>
           <el-menu-item index="likes">点赞记录</el-menu-item>
           <el-menu-item index="favorites">收藏记录</el-menu-item>
@@ -59,28 +54,29 @@
               <!-- 编辑和删除按钮 -->
               <div v-if="!route.params.id && activeMenu === 'posts'" class="post-actions">
                 <div class="ed-icon">
-                  <Icon icon="ant-design:edit-outlined" @click.stop="editPost(post.id)" class="icon"/>
+                  <Icon icon="ant-design:edit-outlined" @click.stop="editPost(post.id)" class="icon" />
                 </div>
                 <div class="ed-icon">
                   <Icon icon="ant-design:delete-outlined" @click.stop="deletePost(post.id)" class="icon" />
                 </div>
               </div>
               <!-- 分割线：不是最后一项才显示 -->
-              <el-divider/>
+              <el-divider />
             </div>
           </template>
           <template v-else-if="!loading">
-            <div  class="empty-tip">暂无文章</div>
+            <div class="empty-tip">暂无文章</div>
           </template>
         </template>
         <template v-if="activeMenu === 'comments'">
           <template v-if="commentList.length">
-            <div v-for="comment in commentList" @click="handleCommentClick(comment)" :key="comment.id" class="post-card-wrapper">
+            <div v-for="comment in commentList" @click="handleCommentClick(comment)" :key="comment.id"
+              class="post-card-wrapper">
               <div class="post-card">
                 <div class="comment-content">{{ comment.content }}</div>
                 <div class="post-time">{{ formatDate(comment.createdAt) }}</div>
               </div>
-              <el-divider/>
+              <el-divider />
             </div>
           </template>
           <template v-else-if="!loading">
@@ -97,8 +93,8 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, onUnmounted, nextTick, watch} from "vue";
-import {useRouter, useRoute} from "vue-router";
+import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import * as BlogApi from '@/api';
 import Avatar from '@/assets/avatar/avatar.png'
 import { ElMessageBox, ElMessage } from "element-plus";
@@ -121,8 +117,8 @@ const fetchUserInfo = async () => {
   try {
     const userId = route.params.id;
     const res = userId
-        ? await BlogApi.getUserInfoById(userId)
-        : await BlogApi.getUserInfo();
+      ? await BlogApi.getUserInfoById(userId)
+      : await BlogApi.getUserInfo();
     userInfo.value = res.data;
   } catch (error) {
     console.error("获取用户信息失败", error);
@@ -151,26 +147,26 @@ const loadData = async () => {
     switch (activeMenu.value) {
       case "posts":
         res = userId
-            ? await BlogApi.getUserPostList(userId, page.value)
-            : await BlogApi.getMyPostList(page.value);
+          ? await BlogApi.getUserPostList(userId, page.value)
+          : await BlogApi.getMyPostList(page.value);
         postList.value.push(...res.data.posts);
         break;
       case "likes":
         res = userId
-            ? await BlogApi.getUserLikedPostList(userId, page.value)
-            : await BlogApi.getMyLikedPostList(page.value);
+          ? await BlogApi.getUserLikedPostList(userId, page.value)
+          : await BlogApi.getMyLikedPostList(page.value);
         postList.value.push(...res.data.posts);
         break;
       case "favorites":
         res = userId
-            ? await BlogApi.getUserFavoritedPostList(userId, page.value)
-            : await BlogApi.getMyFavoritedPostList(page.value);
+          ? await BlogApi.getUserFavoritedPostList(userId, page.value)
+          : await BlogApi.getMyFavoritedPostList(page.value);
         postList.value.push(...res.data.posts);
         break;
       case "comments":
         res = userId
-            ? await BlogApi.getUserCommentList(userId, page.value)
-            : await BlogApi.getMyCommentList(page.value);
+          ? await BlogApi.getUserCommentList(userId, page.value)
+          : await BlogApi.getMyCommentList(page.value);
         commentList.value.push(...res.data.comments);
         break;
       default:
@@ -187,7 +183,7 @@ const loadData = async () => {
   } finally {
     loading.value = false; // 加载完成
     await nextTick(() => {
-        initObserver();
+      initObserver();
     });
   }
 };
@@ -196,30 +192,30 @@ const initObserver = () => {
   if (observer) observer.disconnect();
   if (!observerTarget.value) return;
   observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry.isIntersecting && hasMore.value && !loading.value) {
-          if (timeoutId) clearTimeout(timeoutId);
-          timeoutId = setTimeout(() => {
-            loadData();
-          }, DELAY);
-        }
-      },
-      {
-        root: null,
-        rootMargin: '100px',
-        threshold: 0.1,
+    (entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && hasMore.value && !loading.value) {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          loadData();
+        }, DELAY);
       }
+    },
+    {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1,
+    }
   );
   observer.observe(observerTarget.value);
 };
 
-const handlePostClick = (postId:string) => {
+const handlePostClick = (postId: string) => {
   if (!postId) return;
   router.push(`/post/${postId}`);
 }
 
-const handleCommentClick = (comment:any) => {
+const handleCommentClick = (comment: any) => {
   if (!comment.postId || !comment.id) return;
   router.push(`/post/${comment.postId}#comment-${comment.id}`);
 };
@@ -235,7 +231,7 @@ const deletePost = async (postId: string) => {
       cancelButtonText: '取消',
       type: 'warning'
     });
-    const res = await BlogApi.deletePost(postId);
+    const res: any = await BlogApi.deletePost(postId);
     if (res.code === 0) {
       ElMessage.success('文章删除成功');
       // 重新加载数据
@@ -251,7 +247,7 @@ const deletePost = async (postId: string) => {
   }
 };
 
-const formatDate = (date:any) => {
+const formatDate = (date: any) => {
   const d = new Date(date);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');  // 月份补0
@@ -289,7 +285,7 @@ watch(() => route.params.id, () => {
   gap: 40px;
   margin-bottom: 20px;
 
-  .profile-edit{
+  .profile-edit {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -298,21 +294,25 @@ watch(() => route.params.id, () => {
     border-radius: 8px;
     transition: background 0.2s;
     cursor: pointer;
+
     .edit-icon {
       width: 23px;
       height: 23px;
       color: #999;
     }
+
     &:hover {
       background: #eaeaea;
     }
   }
-  .profile-container{
+
+  .profile-container {
     width: 100%;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
   }
+
   .user-info {
     display: flex;
     flex-direction: column;
@@ -376,12 +376,13 @@ watch(() => route.params.id, () => {
   .postsList {
     flex: 6;
     background-color: #fff;
-    padding: 4px  20px 20px 20px;
+    padding: 4px 20px 20px 20px;
     border-radius: 8px;
     height: 100%;
 
     .post-card-wrapper {
       position: relative;
+
       .post-card {
         border-radius: 6px;
         transition: box-shadow 0.3s;
@@ -392,7 +393,8 @@ watch(() => route.params.id, () => {
           color: #333;
           font-weight: 600;
         }
-        .comment-content{
+
+        .comment-content {
           font-size: 14px;
           line-height: 1.6;
           word-break: break-word;
@@ -406,14 +408,16 @@ watch(() => route.params.id, () => {
           color: #666;
         }
       }
-      .post-actions{
+
+      .post-actions {
         display: flex;
         align-items: center;
         gap: 10px;
         position: absolute;
         right: -110px;
         top: 26px;
-        .ed-icon{
+
+        .ed-icon {
           display: flex;
           align-items: center;
           justify-content: center;
@@ -422,21 +426,24 @@ watch(() => route.params.id, () => {
           border-radius: 8px;
           transition: background 0.2s;
           cursor: pointer;
-          .icon{
+
+          .icon {
             width: 23px;
             height: 23px;
             color: #999;
           }
+
           &:hover {
             background: #eaeaea;
           }
         }
       }
 
-      &:hover .post-title  {
+      &:hover .post-title {
         color: #409EFF;
       }
-      &:hover .comment-content  {
+
+      &:hover .comment-content {
         color: #409EFF;
       }
 
@@ -488,5 +495,4 @@ watch(() => route.params.id, () => {
     height: fit-content;
   }
 }
-
 </style>
